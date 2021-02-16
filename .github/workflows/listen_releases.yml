@@ -1,0 +1,23 @@
+name: Listen Releases
+
+on:
+  repository_dispatch:
+    types: [notify_release]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Listen Release
+      run: ./listen_release.sh
+      env:
+        RELEASE_FILE_URL: ${{ github.event.client_payload.release_file_url }}
+        CORE_NAME: ${{ github.event.client_payload.core_name }}
+        REPOSITORY: ${{ github.event.client_payload.repository }}
+        RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
+        COMMIT_SHA: ${{ github.event.client_payload.commit_sha }}
+        COMMIT_MESSAGE: ${{ github.event.client_payload.commit_msg }}
+        WEBHOOK_REQUEST_SENT: ${{ github.event.client_payload.webhook_request_sent }}
