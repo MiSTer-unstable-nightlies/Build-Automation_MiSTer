@@ -2,8 +2,7 @@ name: CI Build
 
 on:
   push:
-    branches:
-      - master
+  workflow_dispatch:
 
 jobs:
   build:
