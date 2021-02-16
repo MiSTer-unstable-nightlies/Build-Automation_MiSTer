@@ -172,8 +172,11 @@ if gh release view "${RELEASE_TAG}" | grep -q "${RELEASE_FILE}" ; then
     exit 0
 fi
 
+echo "${GITHUB_SHA}" > commit.txt
+
 gh release upload "${RELEASE_TAG}" "${RELEASE_FILE}" --clobber
 gh release upload "${RELEASE_TAG}" "${CURRENT_BUILD_DIR}/${LATEST_BUILD_ZIP}" --clobber
+gh release upload "${RELEASE_TAG}" commit.txt --clobber
 
 rm -rf "${CURRENT_BUILD_FOLDER_TMP}"
 
