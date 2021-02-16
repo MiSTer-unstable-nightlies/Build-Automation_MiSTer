@@ -66,6 +66,7 @@ if gh release download "${RELEASE_TAG}" --pattern "${LATEST_BUILD_ZIP}" 2> /dev/
     echo "Done."
 else
     echo "No previous build found."
+    FIRST_TIME="true"
 fi
 
 echo
@@ -175,6 +176,10 @@ gh release upload "${RELEASE_TAG}" "${RELEASE_FILE}" --clobber
 gh release upload "${RELEASE_TAG}" "${CURRENT_BUILD_DIR}/${LATEST_BUILD_ZIP}" --clobber
 
 rm -rf "${CURRENT_BUILD_FOLDER_TMP}"
+
+if [[ "${FIRST_TIME:-false}" == "true" ]] ; then
+    exit 0
+fi
 
 COMMIT_MESSAGE="$(git log --pretty='format:%as %h: %s [%an]' -n1)"
 
