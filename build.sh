@@ -175,15 +175,17 @@ DIFFERENCES_FOUND_WITH_LATEST_RELEASE="${FIND_DIFFERENCES_BETWEEN_DIRECTORIES_RE
 rm -rf "${LAST_RELEASE_FOLDER_TMP}"
 echo "Differences found with latest release: ${DIFFERENCES_FOUND_WITH_LATEST_RELEASE}"
 
+echo
+echo "Calculating differences with previous unstable build..."
 DIFFERENCES_FOUND_WITH_PREVIOUS_BUILD="true"
 if [[ "${PREVIOUS_BUILD_DIR_TMP:-}" != "" ]] ; then
-    echo
-    echo "Calculating differences with previous unstable build..."
     find_differences_between_directories "${CURRENT_BUILD_DIR}" "${PREVIOUS_BUILD_DIR_TMP}"
     DIFFERENCES_FOUND_WITH_PREVIOUS_BUILD="${FIND_DIFFERENCES_BETWEEN_DIRECTORIES_RET}"
     rm -rf "${PREVIOUS_BUILD_DIR_TMP}"
-    echo "Differences found with previous unstable build: ${DIFFERENCES_FOUND_WITH_PREVIOUS_BUILD}"
+else
+    echo "There wasn't a previous unstable build!"
 fi
+echo "Differences found with previous unstable build: ${DIFFERENCES_FOUND_WITH_PREVIOUS_BUILD}"
 
 if [[ "${DIFFERENCES_FOUND_WITH_LATEST_RELEASE}" != "true" ]] || [[ "${DIFFERENCES_FOUND_WITH_PREVIOUS_BUILD}" != "true" ]] ; then
     rm -rf "${CURRENT_BUILD_FOLDER_TMP}"
@@ -197,6 +199,8 @@ if [[ "${DIFFERENCES_FOUND_WITH_LATEST_RELEASE}" != "true" ]] || [[ "${DIFFERENC
     exit 0
 fi
 
+echo
+echo "There were some differences, proceeding."
 echo
 echo "Creating release ${RELEASE_FILE}."
 
