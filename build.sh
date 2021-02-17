@@ -238,10 +238,12 @@ rm -rf "${CURRENT_BUILD_FOLDER_TMP}"
 for i in {1..1000}
 do
     COMMIT_EMAIL="$(git log --pretty='%ae' -n${i} | tail -n1)"
-    if [[ "${COMMIT_EMAIL}" != "theypsilon@gmail.com" ]] ; then
-        COMMIT_MESSAGE="$(git log --pretty='format:%as %h: %s [%an]' -n1${i} | tail -n1)"
-        break
+    echo "COMMIT_EMAIL: ${COMMIT_EMAIL}"
+    if [[ "${COMMIT_EMAIL}" == "theypsilon@gmail.com" ]] ; then
+        continue
     fi
+    COMMIT_MESSAGE="$(git log --pretty='format:%as %h: %s [%an]' -n1${i} | tail -n1)"
+    break
 done
 
 echo "COMMIT_MESSAGE: ${COMMIT_MESSAGE:-}"
