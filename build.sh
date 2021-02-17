@@ -182,7 +182,7 @@ if [[ "${PREVIOUS_BUILD_DIR_TMP:-}" != "" ]] ; then
     find_differences_between_directories "${CURRENT_BUILD_DIR}" "${PREVIOUS_BUILD_DIR_TMP}"
     DIFFERENCES_FOUND_WITH_PREVIOUS_BUILD="${FIND_DIFFERENCES_BETWEEN_DIRECTORIES_RET}"
     rm -rf "${PREVIOUS_BUILD_DIR_TMP}"
-    echo "Differences found with previous unstable build: ${DIFFERENCES_FOUND_WITH_LATEST_RELEASE}"
+    echo "Differences found with previous unstable build: ${DIFFERENCES_FOUND_WITH_PREVIOUS_BUILD}"
 fi
 
 if [[ "${DIFFERENCES_FOUND_WITH_LATEST_RELEASE}" != "true" ]] || [[ "${DIFFERENCES_FOUND_WITH_PREVIOUS_BUILD}" != "true" ]] ; then
