@@ -116,6 +116,9 @@ if [[ "${FILE_EXTENSION}" != "${COMPILATION_OUTPUT}" ]] ; then
     RELEASE_FILE="${RELEASE_FILE}.${FILE_EXTENSION}"
 fi
 
+echo
+echo "Current commit: ${GITHUB_SHA}"
+
 LAST_RELEASE_FILE=$(cd releases/ ; git ls-files -z | xargs -0 -n1 -I{} -- git log -1 --format="%ai {}" {} | sort | tail -n1 | awk '{ print substr($0, index($0,$4)) }')
 if [[ "${LAST_RELEASE_FILE}" == "" ]] ; then
     echo
