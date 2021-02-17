@@ -132,7 +132,6 @@ echo "Grabbing current files..."
 git fetch origin --unshallow 2> /dev/null || true
 git submodule update --init --recursive
 
-CURRENT_BRANCH="$(git branch --show-current)"
 CURRENT_BUILD_FOLDER_TMP=$(mktemp -d)
 docker build -f Dockerfile.file-filter -t filtered_files .
 docker cp $(docker create --rm filtered_files):/files "${CURRENT_BUILD_FOLDER_TMP}/"
@@ -152,7 +151,7 @@ docker build -f Dockerfile.file-filter -t filtered_files .
 docker cp $(docker create --rm filtered_files):/files "${LAST_RELEASE_FOLDER_TMP}/"
 LAST_RELEASE_DIR="${LAST_RELEASE_FOLDER_TMP}/files"
 
-git checkout -f "${CURRENT_BRANCH}" > /dev/null 2>&1 
+git checkout -f "${GITHUB_SHA}" > /dev/null 2>&1
 
 echo
 echo "Grabbing files from latest unstable build..."
@@ -210,8 +209,8 @@ sed -i "s%<<DOCKER_IMAGE>>%${DOCKER_IMAGE}%g" Dockerfile
 sed -i "s%<<COMPILATION_COMMAND>>%${COMPILATION_COMMAND}%g" Dockerfile
 sed -i "s%<<COMPILATION_OUTPUT>>%${COMPILATION_OUTPUT}%g" Dockerfile
 
-#docker build -t artifact .
-echo docker run --rm artifact > "${RELEASE_FILE}"
+docker build -t artifact .
+docker run --rm artifact > "${RELEASE_FILE}"
 
 RELEASE_FILE_URL="https://github.com/${REPOSITORY}/releases/download/${RELEASE_TAG}/${RELEASE_FILE}"
 echo "Uploading release to ${RELEASE_FILE_URL}"
