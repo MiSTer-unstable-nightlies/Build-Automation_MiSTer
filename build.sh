@@ -143,13 +143,13 @@ echo "    @ commit: ${LAST_RELEASE_COMMIT}"
 echo
 echo "Grabbing latest release files..."
 
-git checkout -f "${LAST_RELEASE_COMMIT}"
+git checkout -f "${LAST_RELEASE_COMMIT}" > /dev/null 2>&1 
 LAST_RELEASE_FOLDER_TMP=$(mktemp -d)
 docker build -f Dockerfile.file-filter -t filtered_files .
 docker cp $(docker create --rm filtered_files):/files "${LAST_RELEASE_FOLDER_TMP}/"
 LAST_RELEASE_DIR="${LAST_RELEASE_FOLDER_TMP}/files"
 
-git checkout -f "${CURRENT_BRANCH}"
+git checkout -f "${CURRENT_BRANCH}" > /dev/null 2>&1 
 
 find_differences_between_directories "${CURRENT_BUILD_DIR}" "${LAST_RELEASE_DIR}"
 DIFFERENCES_FOUND_WITH_LATEST_RELEASE="${FIND_DIFFERENCES_BETWEEN_DIRECTORIES_RET}"
