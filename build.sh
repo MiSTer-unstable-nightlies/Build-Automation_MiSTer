@@ -30,7 +30,7 @@ find_differences_between_directories()
         echo
         echo "Found differences"
         echo "Current build #files: ${CURRENT_BUILD_QTY}"
-        echo "Previous build #files: ${OTHER_BUILD_QTY}"
+        echo "Other build #files: ${OTHER_BUILD_QTY}"
     else
         local CHANGED_FILES=()
         while IFS="" read -r line || [ -n "${line}" ]
@@ -154,6 +154,9 @@ LAST_RELEASE_DIR="${LAST_RELEASE_FOLDER_TMP}/files"
 
 git checkout -f "${CURRENT_BRANCH}" > /dev/null 2>&1 
 
+echo
+echo "Looking for differences with latest release..."
+
 find_differences_between_directories "${CURRENT_BUILD_DIR}" "${LAST_RELEASE_DIR}"
 DIFFERENCES_FOUND_WITH_LATEST_RELEASE="${FIND_DIFFERENCES_BETWEEN_DIRECTORIES_RET}"
 rm -rf "${LAST_RELEASE_FOLDER_TMP}"
@@ -176,12 +179,14 @@ if gh release download "${RELEASE_TAG}" --pattern "${PREVIOUS_BUILD_ZIP}" 2> /de
     rm "${PREVIOUS_BUILD_ZIP}"
     echo "Done."
 else
-    echo "No previous build found."
+    echo "No previous unstable build found."
     IS_FIRST_UNSTABLE_BUILD="true"
 fi
 
 DIFFERENCES_FOUND_WITH_PREVIOUS_BUILD="true"
 if [[ "${PREVIOUS_BUILD_DIR_TMP:-}" != "" ]] ; then
+    echo
+    echo "Looking for differences with latest release..."
     find_differences_between_directories "${CURRENT_BUILD_DIR}" "${PREVIOUS_BUILD_DIR_TMP}"
     DIFFERENCES_FOUND_WITH_PREVIOUS_BUILD="${FIND_DIFFERENCES_BETWEEN_DIRECTORIES_RET}"
     rm -rf "${PREVIOUS_BUILD_DIR_TMP}"
