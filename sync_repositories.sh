@@ -2,4 +2,4 @@
 set -euo pipefail
 
 export GITHUB_TOKEN="${GITHUB_TOKEN}"
-gh api orgs/:org/repos
+gh api orgs/:owner/repos
