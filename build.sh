@@ -155,21 +155,6 @@ LAST_RELEASE_DIR="${LAST_RELEASE_FOLDER_TMP}/files"
 git checkout -f "${CURRENT_BRANCH}" > /dev/null 2>&1 
 
 echo
-echo "Looking for differences with latest release..."
-
-find_differences_between_directories "${CURRENT_BUILD_DIR}" "${LAST_RELEASE_DIR}"
-DIFFERENCES_FOUND_WITH_LATEST_RELEASE="${FIND_DIFFERENCES_BETWEEN_DIRECTORIES_RET}"
-rm -rf "${LAST_RELEASE_FOLDER_TMP}"
-
-if [[ "${DIFFERENCES_FOUND_WITH_LATEST_RELEASE}" != "true" ]] ; then
-    rm -rf "${CURRENT_BUILD_FOLDER_TMP}"
-    echo
-    echo "No changes detected with the latest build from the upstream."
-    echo "Skipping..."
-    exit 0
-fi
-
-echo
 echo "Grabbing files from latest unstable build..."
 PREVIOUS_BUILD_ZIP="LatestBuild.zip"
 export GITHUB_TOKEN="${GITHUB_TOKEN}"
@@ -180,22 +165,34 @@ if gh release download "${RELEASE_TAG}" --pattern "${PREVIOUS_BUILD_ZIP}" 2> /de
     echo "Done."
 else
     echo "No previous unstable build found."
-    IS_FIRST_UNSTABLE_BUILD="true"
 fi
+
+echo
+echo "Calculating differences with latest release..."
+
+find_differences_between_directories "${CURRENT_BUILD_DIR}" "${LAST_RELEASE_DIR}"
+DIFFERENCES_FOUND_WITH_LATEST_RELEASE="${FIND_DIFFERENCES_BETWEEN_DIRECTORIES_RET}"
+rm -rf "${LAST_RELEASE_FOLDER_TMP}"
+echo "Differences found with latest release: ${DIFFERENCES_FOUND_WITH_LATEST_RELEASE}"
 
 DIFFERENCES_FOUND_WITH_PREVIOUS_BUILD="true"
 if [[ "${PREVIOUS_BUILD_DIR_TMP:-}" != "" ]] ; then
     echo
-    echo "Looking for differences with latest release..."
+    echo "Calculating differences with previous unstable build..."
     find_differences_between_directories "${CURRENT_BUILD_DIR}" "${PREVIOUS_BUILD_DIR_TMP}"
     DIFFERENCES_FOUND_WITH_PREVIOUS_BUILD="${FIND_DIFFERENCES_BETWEEN_DIRECTORIES_RET}"
     rm -rf "${PREVIOUS_BUILD_DIR_TMP}"
+    echo "Differences found with previous unstable build: ${DIFFERENCES_FOUND_WITH_LATEST_RELEASE}"
 fi
 
-if [[ "${DIFFERENCES_FOUND_WITH_PREVIOUS_BUILD}" != "true" ]] ; then
+if [[ "${DIFFERENCES_FOUND_WITH_LATEST_RELEASE}" != "true" ]] || [[ "${DIFFERENCES_FOUND_WITH_PREVIOUS_BUILD}" != "true" ]] ; then
     rm -rf "${CURRENT_BUILD_FOLDER_TMP}"
     echo
-    echo "No changes detected since latest unstable build."
+    if [[ "${DIFFERENCES_FOUND_WITH_LATEST_RELEASE}" != "true" ]] ; then
+        echo "No changes detected with the latest build from the upstream."
+    else
+        echo "No changes detected since latest unstable build."
+    fi
     echo "Skipping..."
     exit 0
 fi
@@ -235,10 +232,6 @@ gh release upload "${RELEASE_TAG}" "${CURRENT_BUILD_DIR}/${PREVIOUS_BUILD_ZIP}" 
 gh release upload "${RELEASE_TAG}" commit.txt --clobber
 
 rm -rf "${CURRENT_BUILD_FOLDER_TMP}"
-
-if [[ "${IS_FIRST_UNSTABLE_BUILD:-false}" == "true" ]] ; then
-    exit 0
-fi
 
 for i in {1..1000}
 do
