@@ -200,9 +200,7 @@ if [[ "${DIFFERENCES_FOUND_WITH_LATEST_RELEASE}" != "true" ]] || [[ "${DIFFERENC
 fi
 
 echo
-echo "There were some differences, proceeding."
-echo
-echo "Creating release ${RELEASE_FILE}."
+echo "Creating release ${RELEASE_FILE}"
 
 pushd "${CURRENT_BUILD_DIR}" > /dev/null
 zip -q -9 -r "${PREVIOUS_BUILD_ZIP}" .
