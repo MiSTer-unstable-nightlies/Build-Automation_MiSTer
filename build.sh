@@ -116,7 +116,7 @@ if [[ "${FILE_EXTENSION}" != "${COMPILATION_OUTPUT}" ]] ; then
     RELEASE_FILE="${RELEASE_FILE}.${FILE_EXTENSION}"
 fi
 
-local LAST_RELEASE_FILE=$(cd releases/ ; git ls-files -z | xargs -0 -n1 -I{} -- git log -1 --format="%ai {}" {} | sort | tail -n1 | awk '{ print substr($0, index($0,$4)) }')
+LAST_RELEASE_FILE=$(cd releases/ ; git ls-files -z | xargs -0 -n1 -I{} -- git log -1 --format="%ai {}" {} | sort | tail -n1 | awk '{ print substr($0, index($0,$4)) }')
 if [[ "${LAST_RELEASE_FILE}" == "" ]] ; then
     echo
     echo "No release files in this repository?"
@@ -138,7 +138,7 @@ CURRENT_BUILD_DIR="${CURRENT_BUILD_FOLDER_TMP}/files"
 
 echo
 echo "Found latest release: ${LAST_RELEASE_FILE}"
-local LAST_RELEASE_COMMIT=$(git log -n 1 --pretty=format:%H -- "releases/${LAST_RELEASE_FILE}")
+LAST_RELEASE_COMMIT=$(git log -n 1 --pretty=format:%H -- "releases/${LAST_RELEASE_FILE}")
 echo "    @ commit: ${LAST_RELEASE_COMMIT}"
 echo
 echo "Grabbing latest release files..."
