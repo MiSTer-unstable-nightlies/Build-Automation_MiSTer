@@ -191,7 +191,7 @@ if [[ "${DIFFERENCES_FOUND_WITH_LATEST_RELEASE}" != "true" ]] || [[ "${DIFFERENC
     rm -rf "${CURRENT_BUILD_FOLDER_TMP}"
     echo
     if [[ "${DIFFERENCES_FOUND_WITH_LATEST_RELEASE}" != "true" ]] ; then
-        echo "No changes detected with the latest build from the upstream."
+        echo "No changes detected with the latest release from the upstream."
     else
         echo "No changes detected since latest unstable build."
     fi
