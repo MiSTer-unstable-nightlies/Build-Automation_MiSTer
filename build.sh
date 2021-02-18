@@ -234,7 +234,7 @@ gh release upload "${RELEASE_TAG}" commit.txt --clobber
 
 rm -rf "${CURRENT_BUILD_FOLDER_TMP}"
 
-COMMIT_MESSAGE=""
+COMMIT_MESSAGE="$(git log --pretty='format:%as %h: %s [%an]' -n1 | tail -n1)"
 COMMIT_MESSAGE_EXTRA=""
 for i in {1..1000}
 do
@@ -247,7 +247,7 @@ do
 done
 
 if [ ! -z "${COMMIT_MESSAGE_EXTRA}" ] ; then
-    COMMIT_EMAIL="${COMMIT_EMAIL}\n${COMMIT_MESSAGE_EXTRA}"
+    COMMIT_MESSAGE="${COMMIT_MESSAGE}\n${COMMIT_MESSAGE_EXTRA}"
 fi
 
 echo "COMMIT_MESSAGE: ${COMMIT_MESSAGE}"
