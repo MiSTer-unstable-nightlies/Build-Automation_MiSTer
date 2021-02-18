@@ -251,7 +251,6 @@ if [ ! -z "${COMMIT_MESSAGE_EXTRA}" ] ; then
 fi
 
 echo "COMMIT_MESSAGE: ${COMMIT_MESSAGE}"
-exit 0
 
 WEBHOOK_REQUEST_SENT="false"
 if [[ "${WEBHOOK_URL:-}" != "" ]] ; then
