@@ -91,7 +91,7 @@ fi
 echo "RELEASE_TAG: ${RELEASE_TAG}"
 
 if [[ "${CORE_NAME:-}" == "" ]] ; then
-    CORE_NAME="${REPOSITORY_NAME%%_MiSTer}"
+    CORE_NAME="${REPOSITORY_NAME%%???????}"
 fi
 echo "CORE_NAME: ${CORE_NAME}"
 
