@@ -72,18 +72,21 @@ wget -q -O "${BUILD_AUTOMATION_DIR_TMP}/tmp.zip" "${ARCHIVE_URL}"
 
 unzip -q "${BUILD_AUTOMATION_DIR_TMP}/tmp.zip" -d "${BUILD_AUTOMATION_DIR_TMP}"
 
-cp "${BUILD_AUTOMATION_DIR_TMP}/Build-Automation_MiSTer-main/templates/Dockerfile" .
-cp "${BUILD_AUTOMATION_DIR_TMP}/Build-Automation_MiSTer-main/templates/Dockerfile.file-filter" .
-cp "${BUILD_AUTOMATION_DIR_TMP}/Build-Automation_MiSTer-main/templates/.dockerignore" .
-
-rm -rf "${BUILD_AUTOMATION_DIR_TMP}"
-
-echo ""
+echo
 echo "Arguments"
 REPOSITORY_DOMAIN="${REPOSITORY%%/*}"
 REPOSITORY_NAME="${REPOSITORY##*/}"
 echo "REPOSITORY_DOMAIN: ${REPOSITORY_DOMAIN}"
 echo "REPOSITORY_NAME: ${REPOSITORY_NAME}"
+
+source <(cat "${BUILD_AUTOMATION_DIR_TMP}/Build-Automation_MiSTer-main/repositories.ini" | python3 -c "
+import sys, configparser
+config = configparser.ConfigParser()
+config.read_file(sys.stdin)
+if config.has_section('${REPOSITORY_NAME}'):
+    for var in config['${REPOSITORY_NAME}'].keys():
+        print('%s=\${%s:-\"%s\"}' % (var.upper(), var.upper(), config['${REPOSITORY_NAME}'][var].strip('\"')))
+")
 
 if [[ "${RELEASE_TAG:-}" == "" ]] ; then
     RELEASE_TAG="unstable-builds"
@@ -109,6 +112,18 @@ if [[ "${COMPILATION_OUTPUT:-}" == "" ]] ; then
     COMPILATION_OUTPUT="output_files/${CORE_NAME}.rbf"
 fi
 echo "COMPILATION_OUTPUT: ${COMPILATION_OUTPUT}"
+echo "EXTRA_DOCKERIGNORE_LINE: ${EXTRA_DOCKERIGNORE_LINE:-}"
+
+cp "${BUILD_AUTOMATION_DIR_TMP}/Build-Automation_MiSTer-main/templates/Dockerfile" .
+cp "${BUILD_AUTOMATION_DIR_TMP}/Build-Automation_MiSTer-main/templates/Dockerfile.file-filter" .
+cp "${BUILD_AUTOMATION_DIR_TMP}/Build-Automation_MiSTer-main/templates/.dockerignore" .
+
+rm -rf "${BUILD_AUTOMATION_DIR_TMP}"
+
+if [[ "${EXTRA_DOCKERIGNORE_LINE:-}" != "" ]] ; then
+    echo "${EXTRA_DOCKERIGNORE_LINE}" >> .dockerignore
+    echo >> .dockerignore
+fi
 
 FILE_EXTENSION="${COMPILATION_OUTPUT##*.}"
 RELEASE_FILE="${CORE_NAME}_unstable_$(date +%Y%m%d)_${GITHUB_SHA:0:4}"
