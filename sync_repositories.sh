@@ -22,6 +22,8 @@ sync_repository() {
 }
 
 export GITHUB_TOKEN="${GITHUB_TOKEN}"
+git config --global user.email "theypsilon@gmail.com"
+git config --global user.name "The CI/CD Bot"
 gh api orgs/:owner/repos > repos.json
 
 gh release create "json" -p || true
