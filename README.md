@@ -15,7 +15,7 @@ Automatic builds for your core repository.
 Yes, for that you need to go to the **Actions** tab, select the *workflow* named `CI Build` in the left panel, and press on the button that says "Run workflow" on the top of the right panel.
 
 
-* **Can I deactivate the automatic builds, so I can just use the manually triggered builds instead?**
+* **Can I deactivate the automatic builds, so that I can just use the manually triggered builds instead?**
 
 Yes, just go to the `ci_build.yml` file that you added to your repository, and comment (`#`) the 4th line, so that it looks like this:
 ```
