@@ -230,7 +230,9 @@ sed -i "s%<<COMPILATION_COMMAND>>%${COMPILATION_COMMAND}%g" Dockerfile
 sed -i "s%<<COMPILATION_OUTPUT>>%${COMPILATION_OUTPUT}%g" Dockerfile
 
 if [[ "${RANDOMIZE_SEED}" == "true" ]] ; then
-    echo "set_global_assignment -name SEED ${RANDOM}" >> ${CORE_NAME}.qsf
+    RND="$RANDOM"
+    echo "RANDOM SEED: ${RND}"
+    echo "set_global_assignment -name SEED ${RND}" >> ${CORE_NAME}.qsf
 fi
 
 docker build -t artifact .
