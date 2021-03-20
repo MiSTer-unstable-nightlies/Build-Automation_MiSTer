@@ -112,6 +112,11 @@ if [[ "${COMPILATION_OUTPUT:-}" == "" ]] ; then
     COMPILATION_OUTPUT="output_files/${CORE_NAME}.rbf"
 fi
 echo "COMPILATION_OUTPUT: ${COMPILATION_OUTPUT}"
+
+if [[ "${RANDOMIZE_SEED:-}" == "" ]] ; then
+    RANDOMIZE_SEED="false"
+fi
+echo "RANDOMIZE_SEED: ${RANDOMIZE_SEED}"
 echo "EXTRA_DOCKERIGNORE_LINE: ${EXTRA_DOCKERIGNORE_LINE:-}"
 
 cp "${BUILD_AUTOMATION_DIR_TMP}/Build-Automation_MiSTer-main/templates/Dockerfile" .
@@ -223,6 +228,10 @@ popd > /dev/null
 sed -i "s%<<DOCKER_IMAGE>>%${DOCKER_IMAGE}%g" Dockerfile
 sed -i "s%<<COMPILATION_COMMAND>>%${COMPILATION_COMMAND}%g" Dockerfile
 sed -i "s%<<COMPILATION_OUTPUT>>%${COMPILATION_OUTPUT}%g" Dockerfile
+
+if [[ "${RANDOMIZE_SEED}" == "true" ]] ; then
+    echo "set_global_assignment -name SEED ${RANDOM}" >> ${CORE_NAME}.qsf
+fi
 
 docker build -t artifact .
 docker run --rm artifact > "${RELEASE_FILE}"
