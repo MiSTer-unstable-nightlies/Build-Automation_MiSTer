@@ -232,6 +232,7 @@ sed -i "s%<<COMPILATION_OUTPUT>>%${COMPILATION_OUTPUT}%g" Dockerfile
 if [[ "${RANDOMIZE_SEED}" == "true" ]] ; then
     RND="$RANDOM"
     echo "RANDOM SEED: ${RND}"
+    echo >> ${CORE_NAME}.qsf
     echo "set_global_assignment -name SEED ${RND}" >> ${CORE_NAME}.qsf
 fi
 
