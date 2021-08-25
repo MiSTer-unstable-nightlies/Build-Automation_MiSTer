@@ -236,7 +236,12 @@ if [[ "${RANDOMIZE_SEED}" == "true" ]] ; then
     echo "set_global_assignment -name SEED ${RND}" >> ${CORE_NAME}.qsf
 fi
 
-docker build -t artifact .
+docker build -t artifact . 2>&1 | tee build_artifact.log
+CRITICAL_WARNING=$(grep "Critical Warning (127003): Can't find Memory Initialization File or Hexadecimal (Intel-Format)" build_artifact.log)
+if [[ "${CRITICAL_WARNING}" != "" ]] ; then
+    echo "${CRITICAL_WARNING}"
+    exit 1
+fi
 docker run --rm artifact > "${RELEASE_FILE}"
 
 RELEASE_FILE_URL="https://github.com/${REPOSITORY}/releases/download/${RELEASE_TAG}/${RELEASE_FILE}"
