@@ -239,6 +239,8 @@ fi
 docker build -t artifact . 2>&1 | tee build_artifact.log
 CRITICAL_WARNING=$(grep "Critical Warning (127003): Can't find Memory Initialization File or Hexadecimal (Intel-Format)" build_artifact.log)
 if [[ "${CRITICAL_WARNING}" != "" ]] ; then
+    sleep 15s
+    echo "Non acceptable Critical Warning detected!"
     echo "${CRITICAL_WARNING}"
     exit 1
 fi
