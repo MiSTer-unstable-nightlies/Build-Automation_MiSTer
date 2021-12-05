@@ -139,60 +139,63 @@ fi
 echo
 echo "Current commit: ${GITHUB_SHA}"
 
-LAST_RELEASE_FILE=$(cd releases/ ; git ls-files -z | xargs -0 -n1 -I{} -- git log -1 --format="%ai {}" {} | grep "${CORE_NAME}" | sort | tail -n1 | awk '{ print substr($0, index($0,$4)) }')
+LAST_RELEASE_FILE=
+if [ -d releases/ ] ; then
+    LAST_RELEASE_FILE=$(cd releases/ ; git ls-files -z | xargs -0 -n1 -I{} -- git log -1 --format="%ai {}" {} | grep "${CORE_NAME}" | sort | tail -n1 | awk '{ print substr($0, index($0,$4)) }')
+fi
+
+DIFFERENCES_FOUND_WITH_LATEST_RELEASE="false"
 if [[ "${LAST_RELEASE_FILE}" == "" ]] ; then
     echo
-    echo "No release files in this repository?"
-    echo "Abort."
-    exit 0
-fi
-
-echo
-echo "Grabbing current files..."
-git fetch origin --unshallow 2> /dev/null || true
-git submodule update --init --recursive
-
-CURRENT_BUILD_FOLDER_TMP=$(mktemp -d)
-docker build -f Dockerfile.file-filter -t filtered_files .
-docker cp $(docker create --rm filtered_files):/files "${CURRENT_BUILD_FOLDER_TMP}/"
-CURRENT_BUILD_DIR="${CURRENT_BUILD_FOLDER_TMP}/files"
-
-
-echo
-echo "Found latest release: ${LAST_RELEASE_FILE}"
-LAST_RELEASE_COMMIT=$(git log -n 1 --pretty=format:%H -- "releases/${LAST_RELEASE_FILE}")
-echo "    @ commit: ${LAST_RELEASE_COMMIT}"
-echo
-echo "Grabbing latest release files..."
-
-git checkout -f "${LAST_RELEASE_COMMIT}" > /dev/null 2>&1 
-LAST_RELEASE_FOLDER_TMP=$(mktemp -d)
-docker build -f Dockerfile.file-filter -t filtered_files .
-docker cp $(docker create --rm filtered_files):/files "${LAST_RELEASE_FOLDER_TMP}/"
-LAST_RELEASE_DIR="${LAST_RELEASE_FOLDER_TMP}/files"
-
-git checkout -f "${GITHUB_SHA}" > /dev/null 2>&1
-
-echo
-echo "Grabbing files from latest unstable build..."
-PREVIOUS_BUILD_ZIP="LatestBuild.zip"
-export GITHUB_TOKEN="${GITHUB_TOKEN}"
-if gh release download "${RELEASE_TAG}" --pattern "${PREVIOUS_BUILD_ZIP}" 2> /dev/null ; then
-    PREVIOUS_BUILD_DIR_TMP=$(mktemp -d)
-    unzip -q "${PREVIOUS_BUILD_ZIP}" -d "${PREVIOUS_BUILD_DIR_TMP}"
-    rm "${PREVIOUS_BUILD_ZIP}"
-    echo "Done."
+    echo "No release files in this repository"
 else
-    echo "No previous unstable build found."
+    echo
+    echo "Grabbing current files..."
+    git fetch origin --unshallow 2> /dev/null || true
+    git submodule update --init --recursive
+
+    CURRENT_BUILD_FOLDER_TMP=$(mktemp -d)
+    docker build -f Dockerfile.file-filter -t filtered_files .
+    docker cp $(docker create --rm filtered_files):/files "${CURRENT_BUILD_FOLDER_TMP}/"
+    CURRENT_BUILD_DIR="${CURRENT_BUILD_FOLDER_TMP}/files"
+
+
+    echo
+    echo "Found latest release: ${LAST_RELEASE_FILE}"
+    LAST_RELEASE_COMMIT=$(git log -n 1 --pretty=format:%H -- "releases/${LAST_RELEASE_FILE}")
+    echo "    @ commit: ${LAST_RELEASE_COMMIT}"
+    echo
+    echo "Grabbing latest release files..."
+
+    git checkout -f "${LAST_RELEASE_COMMIT}" > /dev/null 2>&1 
+    LAST_RELEASE_FOLDER_TMP=$(mktemp -d)
+    docker build -f Dockerfile.file-filter -t filtered_files .
+    docker cp $(docker create --rm filtered_files):/files "${LAST_RELEASE_FOLDER_TMP}/"
+    LAST_RELEASE_DIR="${LAST_RELEASE_FOLDER_TMP}/files"
+
+    git checkout -f "${GITHUB_SHA}" > /dev/null 2>&1
+
+    echo
+    echo "Grabbing files from latest unstable build..."
+    PREVIOUS_BUILD_ZIP="LatestBuild.zip"
+    export GITHUB_TOKEN="${GITHUB_TOKEN}"
+    if gh release download "${RELEASE_TAG}" --pattern "${PREVIOUS_BUILD_ZIP}" 2> /dev/null ; then
+        PREVIOUS_BUILD_DIR_TMP=$(mktemp -d)
+        unzip -q "${PREVIOUS_BUILD_ZIP}" -d "${PREVIOUS_BUILD_DIR_TMP}"
+        rm "${PREVIOUS_BUILD_ZIP}"
+        echo "Done."
+    else
+        echo "No previous unstable build found."
+    fi
+
+    echo
+    echo "Calculating differences with latest release..."
+
+    find_differences_between_directories "${CURRENT_BUILD_DIR}" "${LAST_RELEASE_DIR}"
+    DIFFERENCES_FOUND_WITH_LATEST_RELEASE="${FIND_DIFFERENCES_BETWEEN_DIRECTORIES_RET}"
+    rm -rf "${LAST_RELEASE_FOLDER_TMP}"
+    echo "Differences found with latest release: ${DIFFERENCES_FOUND_WITH_LATEST_RELEASE}"
 fi
-
-echo
-echo "Calculating differences with latest release..."
-
-find_differences_between_directories "${CURRENT_BUILD_DIR}" "${LAST_RELEASE_DIR}"
-DIFFERENCES_FOUND_WITH_LATEST_RELEASE="${FIND_DIFFERENCES_BETWEEN_DIRECTORIES_RET}"
-rm -rf "${LAST_RELEASE_FOLDER_TMP}"
-echo "Differences found with latest release: ${DIFFERENCES_FOUND_WITH_LATEST_RELEASE}"
 
 echo
 echo "Calculating differences with previous unstable build..."
