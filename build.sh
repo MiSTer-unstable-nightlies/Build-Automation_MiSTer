@@ -264,7 +264,7 @@ if [[ "${CURRENT_BUILD_DIR:-}" != "" ]] && [[ "${PREVIOUS_BUILD_ZIP:-}" != "" ]]
 fi
 gh release upload "${RELEASE_TAG}" commit.txt --clobber
 
-rm -rf "${CURRENT_BUILD_FOLDER_TMP}"
+rm -rf "${CURRENT_BUILD_FOLDER_TMP}" 2> /dev/null || true
 
 COMMIT_MESSAGE="$(git log --pretty='format:%as %h: %s [%an]' -n1 | tail -n1)"
 COMMIT_MESSAGE_EXTRA=""
