@@ -144,7 +144,7 @@ if [ -d releases/ ] ; then
     LAST_RELEASE_FILE=$(cd releases/ ; git ls-files -z | xargs -0 -n1 -I{} -- git log -1 --format="%ai {}" {} | grep "${CORE_NAME}" | sort | tail -n1 | awk '{ print substr($0, index($0,$4)) }')
 fi
 
-DIFFERENCES_FOUND_WITH_LATEST_RELEASE="false"
+DIFFERENCES_FOUND_WITH_LATEST_RELEASE="true"
 if [[ "${LAST_RELEASE_FILE}" == "" ]] ; then
     echo
     echo "No release files in this repository"
@@ -210,7 +210,7 @@ fi
 echo "Differences found with previous unstable build: ${DIFFERENCES_FOUND_WITH_PREVIOUS_BUILD}"
 
 if [[ "${DIFFERENCES_FOUND_WITH_LATEST_RELEASE}" != "true" ]] || [[ "${DIFFERENCES_FOUND_WITH_PREVIOUS_BUILD}" != "true" ]] ; then
-    rm -rf "${CURRENT_BUILD_FOLDER_TMP}"
+    rm -rf "${CURRENT_BUILD_FOLDER_TMP}" 2> /dev/null || true
     echo
     if [[ "${DIFFERENCES_FOUND_WITH_LATEST_RELEASE}" != "true" ]] ; then
         echo "No changes detected since the latest release from upstream."
