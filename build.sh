@@ -195,6 +195,10 @@ else
     DIFFERENCES_FOUND_WITH_LATEST_RELEASE="${FIND_DIFFERENCES_BETWEEN_DIRECTORIES_RET}"
     rm -rf "${LAST_RELEASE_FOLDER_TMP}"
     echo "Differences found with latest release: ${DIFFERENCES_FOUND_WITH_LATEST_RELEASE}"
+    
+    pushd "${CURRENT_BUILD_DIR}" > /dev/null
+    zip -q -9 -r "${PREVIOUS_BUILD_ZIP}" .
+    popd > /dev/null
 fi
 
 echo
@@ -223,10 +227,6 @@ fi
 
 echo
 echo "Creating release ${RELEASE_FILE}"
-
-pushd "${CURRENT_BUILD_DIR}" > /dev/null
-zip -q -9 -r "${PREVIOUS_BUILD_ZIP}" .
-popd > /dev/null
 
 sed -i "s%<<DOCKER_IMAGE>>%${DOCKER_IMAGE}%g" Dockerfile
 sed -i "s%<<COMPILATION_COMMAND>>%${COMPILATION_COMMAND}%g" Dockerfile
@@ -259,7 +259,9 @@ fi
 echo "${GITHUB_SHA}" > commit.txt
 
 gh release upload "${RELEASE_TAG}" "${RELEASE_FILE}" --clobber
-gh release upload "${RELEASE_TAG}" "${CURRENT_BUILD_DIR}/${PREVIOUS_BUILD_ZIP}" --clobber
+if [[ "${CURRENT_BUILD_DIR:-}" != "" ]] && [[ "${PREVIOUS_BUILD_ZIP:-}" != "" ]] ; then
+    gh release upload "${RELEASE_TAG}" "${CURRENT_BUILD_DIR}/${PREVIOUS_BUILD_ZIP}" --clobber
+fi
 gh release upload "${RELEASE_TAG}" commit.txt --clobber
 
 rm -rf "${CURRENT_BUILD_FOLDER_TMP}"
