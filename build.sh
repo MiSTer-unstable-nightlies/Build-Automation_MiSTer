@@ -273,6 +273,7 @@ do
     if [[ "${COMMIT_EMAIL}" != "theypsilon@gmail.com" ]] ; then
         COMMIT_MESSAGE="$(git log --pretty='format:%as %h: %s [%an]' -n${i} | tail -n1)"
         COMMIT_MESSAGE_EXTRA="$(git log --pretty='format:%b' -n${i} | tail -n1)"
+        echo "Stopping commit search at i: ${i}"
         break
     fi
 done
