@@ -144,6 +144,9 @@ if [ -d releases/ ] ; then
     LAST_RELEASE_FILE=$(cd releases/ ; git ls-files -z | xargs -0 -n1 -I{} -- git log -1 --format="%ai {}" {} | grep "${CORE_NAME}" | sort | tail -n1 | awk '{ print substr($0, index($0,$4)) }')
 fi
 
+git fetch origin --unshallow 2> /dev/null || true
+git submodule update --init --recursive
+
 DIFFERENCES_FOUND_WITH_LATEST_RELEASE="true"
 if [[ "${LAST_RELEASE_FILE}" == "" ]] ; then
     echo
@@ -151,8 +154,6 @@ if [[ "${LAST_RELEASE_FILE}" == "" ]] ; then
 else
     echo
     echo "Grabbing current files..."
-    git fetch origin --unshallow 2> /dev/null || true
-    git submodule update --init --recursive
 
     CURRENT_BUILD_FOLDER_TMP=$(mktemp -d)
     docker build -f Dockerfile.file-filter -t filtered_files .
