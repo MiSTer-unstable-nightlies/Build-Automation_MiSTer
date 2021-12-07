@@ -265,19 +265,8 @@ if [[ "${CURRENT_BUILD_DIR:-}" != "" ]] && [[ "${PREVIOUS_BUILD_ZIP:-}" != "" ]]
 fi
 gh release upload "${RELEASE_TAG}" commit.txt --clobber
 
-COMMIT_MESSAGE="$(git log --pretty='format:%as %h: %s [%an]' -n1 | tail -n1)"
-COMMIT_MESSAGE_EXTRA=""
-for i in {1..1000}
-do
-    COMMIT_EMAIL="$(git log --pretty='%ae' -n${i} | tail -n1)"
-    if [[ "${COMMIT_EMAIL}" != "theypsilon@gmail.com" ]] ; then
-        COMMIT_MESSAGE="$(git log --pretty='format:%as %h: %s [%an]' -n${i} | tail -n1)"
-        COMMIT_MESSAGE_EXTRA="$(git log --pretty='format:%b' -n${i} | tail -n1)"
-        echo "Stopping commit search at i: ${i}"
-        echo "COMMIT_EMAIL: ${COMMIT_EMAIL}"
-        break
-    fi
-done
+COMMIT_MESSAGE="$(git log --invert-grep --author=theypsilon@gmail.com --pretty='format:%as %h: %s [%an]' -n1 | tail -n1)"
+COMMIT_MESSAGE_EXTRA="$(git log --invert-grep --author=theypsilon@gmail.com --pretty='format:%b' -n1 | tail -n1)"
 
 if [ ! -z "${COMMIT_MESSAGE_EXTRA}" ] ; then
     COMMIT_MESSAGE="${COMMIT_MESSAGE}\n${COMMIT_MESSAGE_EXTRA}"
