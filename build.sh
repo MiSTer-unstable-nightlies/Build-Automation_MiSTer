@@ -265,13 +265,14 @@ if [[ "${CURRENT_BUILD_DIR:-}" != "" ]] && [[ "${PREVIOUS_BUILD_ZIP:-}" != "" ]]
 fi
 gh release upload "${RELEASE_TAG}" commit.txt --clobber
 
-COMMIT_MESSAGE="$(git log --invert-grep --author=theypsilon@gmail.com --pretty='format:%as %h: %s [%an]' -n1 | tail -n1)"
-COMMIT_MESSAGE_EXTRA="$(git log --invert-grep --author=theypsilon@gmail.com --pretty='format:%b' -n1 | tail -n1)"
-
-if [ ! -z "${COMMIT_MESSAGE_EXTRA}" ] ; then
-    COMMIT_MESSAGE="${COMMIT_MESSAGE}\n${COMMIT_MESSAGE_EXTRA}"
+COMMIT_MESSAGE_HEADER="$(git log --invert-grep --author=theypsilon@gmail.com --pretty='format:%as %h [%an]:' -n1)"
+COMMIT_MESSAGE_BODY="$(git log --invert-grep --author=theypsilon@gmail.com --pretty='%B' -n1)"
+if [[ $COMMIT_MESSAGE_BODY == *$'\n'* ]] ; then
+    COMMIT_MESSAGE="${COMMIT_MESSAGE_HEADER}\n${COMMIT_MESSAGE_BODY}"
+else
+    COMMIT_MESSAGE="${COMMIT_MESSAGE_HEADER} ${COMMIT_MESSAGE_BODY}"
 fi
-
+COMMIT_MESSAGE="${COMMIT_MESSAGE//$'\n'/\\n}"
 COMMIT_MESSAGE="${COMMIT_MESSAGE//\"/\'}"
 echo "COMMIT_MESSAGE: ${COMMIT_MESSAGE}"
 
