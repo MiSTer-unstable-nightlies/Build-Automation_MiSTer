@@ -277,29 +277,6 @@ COMMIT_MESSAGE="${COMMIT_MESSAGE//$'\n'/\\n}"
 COMMIT_MESSAGE="${COMMIT_MESSAGE//\"/\'}"
 echo "COMMIT_MESSAGE: ${COMMIT_MESSAGE}"
 
-WEBHOOK_REQUEST_SENT="false"
-if [[ "${WEBHOOK_URL:-}" != "" ]] ; then
-    DISCORD_MESSAGE="Latest **${CORE_NAME}** unstable build: ${RELEASE_FILE_URL}"
-    DISCORD_MESSAGE+="\n"
-    DISCORD_MESSAGE+="\`\`\`Commit ${COMMIT_MESSAGE}\`\`\`"
-
-    echo
-    echo "Discord message:"
-    echo "${DISCORD_MESSAGE}"
-    echo
-
-    curl --fail --output /dev/null \
-        -i \
-        -H "Accept: application/json" \
-        -H "Content-Type:application/json" \
-        -X POST \
-        --data "{\"content\": \"${DISCORD_MESSAGE}\"}" \
-        "${WEBHOOK_URL}"
-        
-    echo "Message sent successfully."
-    WEBHOOK_REQUEST_SENT="true"
-fi
-
 if [[ "${DISPATCH_TOKEN:-}" != "" ]] ; then
     CLIENT_PAYLOAD="\"release_file_url\":\"${RELEASE_FILE_URL}\""
     CLIENT_PAYLOAD+=",\"core_name\":\"${CORE_NAME}\""
@@ -307,7 +284,7 @@ if [[ "${DISPATCH_TOKEN:-}" != "" ]] ; then
     CLIENT_PAYLOAD+=",\"release_tag\":\"${RELEASE_TAG}\""
     CLIENT_PAYLOAD+=",\"commit_sha\":\"${GITHUB_SHA}\""
     CLIENT_PAYLOAD+=",\"commit_msg\":\"${COMMIT_MESSAGE}\""
-    CLIENT_PAYLOAD+=",\"webhook_request_sent\":\"${WEBHOOK_REQUEST_SENT}\""
+    CLIENT_PAYLOAD+=",\"webhook_request_sent\":\"false\""
 
     DATA_JSON="{\"event_type\":\"notify_release\",\"client_payload\":{${CLIENT_PAYLOAD}}}"
     
