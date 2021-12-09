@@ -8,9 +8,8 @@ echo "REPOSITORY: ${REPOSITORY}"
 echo "RELEASE_TAG: ${RELEASE_TAG}"
 echo "COMMIT_SHA: ${COMMIT_SHA}"
 echo "COMMIT_MESSAGE: ${COMMIT_MESSAGE}"
-echo "WEBHOOK_REQUEST_SENT: ${WEBHOOK_REQUEST_SENT}"
 
-if [[ "${WEBHOOK_URL:-}" != "" ]] && [[ "${WEBHOOK_REQUEST_SENT:-false}" == "false" ]] ; then
+if [[ "${WEBHOOK_URL:-}" != "" ]] ; then
     DISCORD_MESSAGE="Latest **${CORE_NAME}** unstable build: ${RELEASE_FILE_URL}"
     DISCORD_MESSAGE+="\n"
     DISCORD_MESSAGE+="\`\`\`Commit ${COMMIT_MESSAGE}\`\`\`"
