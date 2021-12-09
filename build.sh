@@ -284,7 +284,6 @@ if [[ "${DISPATCH_TOKEN:-}" != "" ]] ; then
     CLIENT_PAYLOAD+=",\"release_tag\":\"${RELEASE_TAG}\""
     CLIENT_PAYLOAD+=",\"commit_sha\":\"${GITHUB_SHA}\""
     CLIENT_PAYLOAD+=",\"commit_msg\":\"${COMMIT_MESSAGE}\""
-    CLIENT_PAYLOAD+=",\"webhook_request_sent\":\"false\""
 
     DATA_JSON="{\"event_type\":\"notify_release\",\"client_payload\":{${CLIENT_PAYLOAD}}}"
     
