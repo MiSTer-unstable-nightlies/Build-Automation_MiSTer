@@ -1,0 +1,46 @@
+name: Trigger Release Event
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_file_url:
+        description: 'RELEASE_FILE_URL'
+        required: true
+        default: 'https://something'
+      core_name:
+        description: 'CORE_NAME'
+        required: true
+        default: 'PlayStation'
+      repository:
+        description: 'REPOSITORY'
+        required: true
+        default: ''
+      release_tag:
+        description: 'RELEASE_TAG'
+        required: true
+        default: ''
+      commit_sha:
+        description: 'COMMIT_SHA'
+        required: true
+        default: ''
+      commit_msg:
+        description: 'COMMIT_MESSAGE'
+        required: true
+        default: ''
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Listen Release
+      run: ./listen_release.sh
+      env:
+        RELEASE_FILE_URL: ${{ github.event.inputs.release_file_url }}
+        CORE_NAME: ${{ github.event.inputs.core_name }}
+        REPOSITORY: ${{ github.event.inputs.repository }}
+        RELEASE_TAG: ${{ github.event.inputs.release_tag }}
+        COMMIT_SHA: ${{ github.event.inputs.commit_sha }}
+        COMMIT_MESSAGE: ${{ github.event.inputs.commit_msg }}
+        WEBHOOK_URL: ${{ secrets.DISCORD_NIGHTLIES_WEBHOOK_URL }}
