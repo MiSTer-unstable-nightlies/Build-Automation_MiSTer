@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DISPATCH_URL="https://api.github.com/repos/MiSTer-unstable-nightlies/Build-Automation_MiSTer/dispatches"
+DISPATCH_URL="${DISPATCH_URL:-https://api.github.com/repos/MiSTer-unstable-nightlies/Build-Automation_MiSTer/actions/workflows/listen_releases.yml/dispatches}"
+DISPATCH_REF="${DISPATCH_REF:-refs/heads/main}"
 ARCHIVE_URL="https://github.com/MiSTer-unstable-nightlies/Build-Automation_MiSTer/archive/main.zip"
 
 FIND_DIFFERENCES_BETWEEN_DIRECTORIES_RET=
@@ -285,17 +286,17 @@ if [[ "${DISPATCH_TOKEN:-}" != "" ]] ; then
     CLIENT_PAYLOAD+=",\"commit_sha\":\"${GITHUB_SHA}\""
     CLIENT_PAYLOAD+=",\"commit_msg\":\"${COMMIT_MESSAGE}\""
 
-    DATA_JSON="{\"event_type\":\"notify_release\",\"client_payload\":{${CLIENT_PAYLOAD}}}"
+    DATA_JSON="{\"ref\":\"${DISPATCH_REF}\",\"inputs\":{${CLIENT_PAYLOAD}}}"
     
     echo
-    echo "Sending dispatch event to ${DISPATCH_URL} with payload:"
+    echo "Sending dispatch event to ${DISPATCH_URL}:${DISPATCH_REF} with payload:"
     echo "${DATA_JSON}"
     echo
 
     curl --fail --output /dev/null \
         -X POST \
         -H "Authorization: token ${DISPATCH_TOKEN}" \
-        -H "Accept: application/vnd.github.everest-preview+json" \
+        -H "Accept: application/vnd.github.v3+json" \
         -H "Content-Type: application/json" \
         --data "${DATA_JSON}" \
         "${DISPATCH_URL}"

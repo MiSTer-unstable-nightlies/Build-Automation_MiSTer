@@ -17,4 +17,3 @@ jobs:
         REPOSITORY: ${{ github.repository }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         DISPATCH_TOKEN: ${{ secrets.BUILD_AUTOMATION_DISPATCH_TOKEN }}
-        WEBHOOK_URL: ${{ secrets.DISCORD_NIGHTLIES_WEBHOOK_URL }}
