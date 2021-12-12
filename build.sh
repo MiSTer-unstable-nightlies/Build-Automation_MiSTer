@@ -276,6 +276,7 @@ else
 fi
 COMMIT_MESSAGE="${COMMIT_MESSAGE//$'\n'/\\n}"
 COMMIT_MESSAGE="${COMMIT_MESSAGE//\"/\'}"
+COMMIT_MESSAGE="${COMMIT_MESSAGE//$'\r'/}"
 echo "COMMIT_MESSAGE: ${COMMIT_MESSAGE}"
 
 if [[ "${DISPATCH_TOKEN:-}" != "" ]] ; then
