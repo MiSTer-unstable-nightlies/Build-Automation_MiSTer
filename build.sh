@@ -198,11 +198,6 @@ else
     echo "No previous unstable build found."
 fi
 
-echo "Zipping current files to prepare next LastBuild.zip file..."
-pushd "${CURRENT_BUILD_DIR}" > /dev/null
-zip -q -9 -r "${PREVIOUS_BUILD_ZIP}" .
-popd > /dev/null
-
 echo
 echo "Calculating differences with previous unstable build..."
 DIFFERENCES_FOUND_WITH_PREVIOUS_BUILD="true"
@@ -226,6 +221,13 @@ if [[ "${DIFFERENCES_FOUND_WITH_LATEST_RELEASE}" != "true" ]] || [[ "${DIFFERENC
     echo "Skipping..."
     exit 0
 fi
+
+
+echo
+echo "Zipping current files to prepare next LastBuild.zip file..."
+pushd "${CURRENT_BUILD_DIR}" > /dev/null
+zip -q -9 -r "${PREVIOUS_BUILD_ZIP}" .
+popd > /dev/null
 
 echo
 echo "Creating release ${RELEASE_FILE}"
@@ -261,11 +263,10 @@ fi
 echo "${GITHUB_SHA}" > commit.txt
 
 gh release upload "${RELEASE_TAG}" "${RELEASE_FILE}" --clobber
-if [[ "${CURRENT_BUILD_DIR:-}" != "" ]] && [[ "${PREVIOUS_BUILD_ZIP:-}" != "" ]] ; then
-    gh release upload "${RELEASE_TAG}" "${CURRENT_BUILD_DIR}/${PREVIOUS_BUILD_ZIP}" --clobber
-    rm -rf "${CURRENT_BUILD_FOLDER_TMP}" 2> /dev/null || true
-fi
+gh release upload "${RELEASE_TAG}" "${CURRENT_BUILD_DIR}/${PREVIOUS_BUILD_ZIP}" --clobber
 gh release upload "${RELEASE_TAG}" commit.txt --clobber
+
+rm -rf "${CURRENT_BUILD_FOLDER_TMP}" 2> /dev/null || true
 
 COMMIT_MESSAGE_HEADER="$(git log --invert-grep --author=theypsilon@gmail.com --pretty='format:[%an %as %h]' -n1)"
 COMMIT_MESSAGE_BODY="$(git log --invert-grep --author=theypsilon@gmail.com --pretty='%B' -n1)"
