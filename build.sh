@@ -267,7 +267,7 @@ if [[ "${CURRENT_BUILD_DIR:-}" != "" ]] && [[ "${PREVIOUS_BUILD_ZIP:-}" != "" ]]
 fi
 gh release upload "${RELEASE_TAG}" commit.txt --clobber
 
-COMMIT_MESSAGE_HEADER="$(git log --invert-grep --author=theypsilon@gmail.com --pretty='format:%as %h [%an]:' -n1)"
+COMMIT_MESSAGE_HEADER="$(git log --invert-grep --author=theypsilon@gmail.com --pretty='format:[%an %h %as]' -n1)"
 COMMIT_MESSAGE_BODY="$(git log --invert-grep --author=theypsilon@gmail.com --pretty='%B' -n1)"
 if [[ $COMMIT_MESSAGE_BODY == *$'\n'* ]] ; then
     COMMIT_MESSAGE="${COMMIT_MESSAGE_HEADER}\n${COMMIT_MESSAGE_BODY}"
