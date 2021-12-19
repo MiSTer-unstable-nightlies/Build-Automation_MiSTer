@@ -12,15 +12,16 @@ COMMIT_MESSAGE="${COMMIT_MESSAGE//$'\n'/\\n}"
 COMMIT_MESSAGE="${COMMIT_MESSAGE//\"/\'}"
 echo "COMMIT_MESSAGE: ${COMMIT_MESSAGE}"
 
-if [[ "${WEBHOOK_URL:-}" != "" ]] ; then
-    DISCORD_MESSAGE="Latest **${CORE_NAME}** unstable build: ${RELEASE_FILE_URL}"
-    DISCORD_MESSAGE+="\n"
-    DISCORD_MESSAGE+="\`\`\`Commit ${COMMIT_MESSAGE}\`\`\`"
+DISCORD_MESSAGE="Latest **${CORE_NAME}** unstable build: ${RELEASE_FILE_URL}"
+DISCORD_MESSAGE+="\n"
+DISCORD_MESSAGE+="\`\`\`${COMMIT_MESSAGE}\`\`\`"
 
-    echo
-    echo "Discord message:"
-    echo "${DISCORD_MESSAGE}"
-    echo
+echo
+echo "Discord message:"
+echo "${DISCORD_MESSAGE}"
+echo
+
+if [[ "${WEBHOOK_URL:-}" != "" ]] ; then
 
     curl \
         --fail \
@@ -32,5 +33,5 @@ if [[ "${WEBHOOK_URL:-}" != "" ]] ; then
         --data "{\"content\": \"${DISCORD_MESSAGE}\"}" \
         "${WEBHOOK_URL}"
         
-    echo "Message sent successfully."
+    echo "Message sent to MiSTer official Discord successfully."
 fi
