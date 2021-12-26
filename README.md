@@ -2,10 +2,15 @@
 
 Automatic builds for your core repository.
 
-## How to Use
+## How to add an official repository to #unstable-nightlies
+
+1. Fork the repository into the **MiSTer-unstable-nightlies** organization. If you don't have access but you are member of the **MiSTer-devel** organization, feel free to request it to the admins.
+2. Add the [ci_build.yml](templates/ci_build.yml) file to the fork repository at the path `.github/workflows/ci_build.yml`.
+
+## How to build automatically your private repository
 
 1. Add the [ci_build.yml](templates/ci_build.yml) file to your repository at the path `.github/workflows/ci_build.yml`. After this, builds will be triggered automatically after a *push*.
-2. In case you want to tigger Discord notifications, add a [secret](https://docs.github.com/en/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository) named `DISCORD_NIGHTLIES_WEBHOOK_URL` with your webhook URL to your repository. *(optional)*
+2. In case you want to trigger post-build actions, tweak the environment variables `DISPATCH_URL`, `DISPATCH_REF` and `DISPATCH_TOKEN` accordingly. So it can send a dispatch request to your listener repository. [Here is a an example](.github/workflows/listen_releases.yml) of a workflow listening for such request. You'll receive commit data that you may use for sending Discord notifications among other things. *(optional)*
 3. When the build is ready (check the **Actions** tab of your repository to see the job progress), find your `.rbf` file in the **Releases** page of your repository.
 
 ## FAQ
@@ -32,11 +37,6 @@ For that, you have to replace the line that includes the string `https://raw.git
 * **Some core doesn't work, what can I do?**
 
 Some cores need some specific tweaking added at the [repositories.ini](repositories.ini) file. If you have a core that doesn't work consistently, maybe we will have to add it there with some specific parameters. Open an **Issue** to let us know, and we will look into it.
-
-
-* **Can we add another Webhook / Notification / Post-Trigger action to the system?**
-
-Probably not. Maybe at some point if it makes sense.
 
 
 ## License
