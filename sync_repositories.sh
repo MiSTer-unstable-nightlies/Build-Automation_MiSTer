@@ -14,9 +14,11 @@ sync_repository() {
     pushd "${SYNC_DIR_TMP}" > /dev/null
     git remote add upstream "${UPSTREAM}"
     git fetch upstream
-    git cherry-pick HEAD.."upstream/${BRANCH}"
-    echo git push "https://...:...@github.com/${USER}/${CORE_NAME}.git" origin "${BRANCH}"
-    git push "https://${DISPATCH_USER}:${DISPATCH_TOKEN}@github.com/${USER}/${CORE_NAME}.git" "${BRANCH}"
+    if git cherry-pick HEAD.."upstream/${BRANCH}" ; then
+        echo "Pushing!"
+        echo git push "https://...:...@github.com/${USER}/${CORE_NAME}.git" origin "${BRANCH}"
+        git push "https://${DISPATCH_USER}:${DISPATCH_TOKEN}@github.com/${USER}/${CORE_NAME}.git" "${BRANCH}"
+    fi
     popd > /dev/null
     rm -rf "${SYNC_DIR_TMP}"
 }
