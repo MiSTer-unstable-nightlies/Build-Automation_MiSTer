@@ -14,7 +14,31 @@ sync_repository() {
     pushd "${SYNC_DIR_TMP}" > /dev/null
     git remote add upstream "${UPSTREAM}"
     git fetch upstream
-    if git cherry-pick -x HEAD.."upstream/${BRANCH}" ; then
+
+    local LAST_BOT_COMMIT=$(git log --pretty=format:"%cn %H" | grep "Unstable Nightlies Bot" | head -n 1 | awk '{print $4}')
+    local CHERRY_PICK_COMMIT=
+
+    if [[ "${LAST_BOT_COMMIT_ID}" != "" ]] ; then
+        CHERRY_PICK_COMMIT=$(git log --format=%B -n 1 ${LAST_BOT_COMMIT} 2> /dev/null | awk NF | tail -n 1 | awk '{print $5}' | sed 's/.$//')
+    fi
+
+    local PUSH="false"
+    if [[ "${LAST_BOT_COMMIT_ID}" != "" ]] && [[ "${CHERRY_PICK_COMMIT}" != "" ]] ; then
+        echo "LAST_BOT_COMMIT: ${LAST_BOT_COMMIT}"
+        echo "CHERRY_PICK_COMMIT: ${CHERRY_PICK_COMMIT}"
+        echo
+        echo "Cherry Pick ${CHERRY_PICK_COMMIT}..upstream/${BRANCH}"
+        if git cherry-pick -x ${CHERRY_PICK_COMMIT}..upstream/${BRANCH} ; then
+            PUSH="true"
+        fi
+    else
+        echo "Cherry Pick HEAD..upstream/${BRANCH}"
+        if git cherry-pick -x HEAD..upstream/${BRANCH} ; then
+            PUSH="true"
+        fi
+    fi
+
+    if [[ "${PUSH}" == "true" ]] ; then
         echo "Pushing!"
         echo git push "https://...:...@github.com/${USER}/${CORE_NAME}.git" origin "${BRANCH}"
         git push "https://${DISPATCH_USER}:${DISPATCH_TOKEN}@github.com/${USER}/${CORE_NAME}.git" "${BRANCH}"
