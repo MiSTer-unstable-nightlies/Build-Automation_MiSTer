@@ -18,12 +18,12 @@ sync_repository() {
     local LAST_BOT_COMMIT=$(git log --pretty=format:"%cn %H" | grep "Unstable Nightlies Bot" | head -n 1 | awk '{print $4}')
     local CHERRY_PICK_COMMIT=
 
-    if [[ "${LAST_BOT_COMMIT_ID}" != "" ]] ; then
+    if [[ "${LAST_BOT_COMMIT}" != "" ]] ; then
         CHERRY_PICK_COMMIT=$(git log --format=%B -n 1 ${LAST_BOT_COMMIT} 2> /dev/null | awk NF | tail -n 1 | awk '{print $5}' | sed 's/.$//')
     fi
 
     local PUSH="false"
-    if [[ "${LAST_BOT_COMMIT_ID}" != "" ]] && [[ "${CHERRY_PICK_COMMIT}" != "" ]] ; then
+    if [[ "${LAST_BOT_COMMIT}" != "" ]] && [[ "${CHERRY_PICK_COMMIT}" != "" ]] ; then
         echo "LAST_BOT_COMMIT: ${LAST_BOT_COMMIT}"
         echo "CHERRY_PICK_COMMIT: ${CHERRY_PICK_COMMIT}"
         echo
