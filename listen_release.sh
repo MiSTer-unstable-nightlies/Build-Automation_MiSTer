@@ -10,6 +10,7 @@ echo "COMMIT_SHA: ${COMMIT_SHA}"
 
 COMMIT_MESSAGE="${COMMIT_MESSAGE//$'\n'/\\n}"
 COMMIT_MESSAGE="${COMMIT_MESSAGE//\"/\'}"
+COMMIT_MESSAGE=$(echo "${COMMIT_MESSAGE}" | sed -e 's/\([\]n\)*[(]cherry picked from commit \([a-f0-9]*\)[)]$//g')
 echo "COMMIT_MESSAGE: ${COMMIT_MESSAGE}"
 
 DISCORD_MESSAGE="Latest **${CORE_NAME}** unstable build: ${RELEASE_FILE_URL}"
