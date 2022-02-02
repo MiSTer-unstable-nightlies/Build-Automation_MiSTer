@@ -132,7 +132,7 @@ if [[ "${EXTRA_DOCKERIGNORE_LINE:-}" != "" ]] ; then
 fi
 
 FILE_EXTENSION="${COMPILATION_OUTPUT##*.}"
-RELEASE_FILE="${CORE_NAME}_unstable_$(date +%Y%m%d)_${GITHUB_SHA:0:4}"
+RELEASE_FILE="${CORE_NAME}_unstable_$(date +%Y%m%d)_$(date +%H)${GITHUB_SHA:0:4}"
 if [[ "${FILE_EXTENSION}" != "${COMPILATION_OUTPUT}" ]] ; then
     RELEASE_FILE="${RELEASE_FILE}.${FILE_EXTENSION}"
 fi
