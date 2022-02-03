@@ -8,6 +8,8 @@ echo "REPOSITORY: ${REPOSITORY}"
 echo "RELEASE_TAG: ${RELEASE_TAG}"
 echo "COMMIT_SHA: ${COMMIT_SHA}"
 
+set +x
+
 COMMIT_MESSAGE="${COMMIT_MESSAGE//$'\n'/\\n}"
 COMMIT_MESSAGE="${COMMIT_MESSAGE//\"/\'}"
 COMMIT_MESSAGE=$(echo "${COMMIT_MESSAGE}" | sed -e 's/\([\]n\)*[(]cherry picked from commit \([a-f0-9]*\)[)]$//g')
