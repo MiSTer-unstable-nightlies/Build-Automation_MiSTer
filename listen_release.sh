@@ -8,13 +8,17 @@ echo "REPOSITORY: ${REPOSITORY}"
 echo "RELEASE_TAG: ${RELEASE_TAG}"
 echo "COMMIT_SHA: ${COMMIT_SHA}"
 
-set +x
-
+echo "1"
 COMMIT_MESSAGE="${COMMIT_MESSAGE//$'\n'/\\n}"
+echo "2"
 COMMIT_MESSAGE="${COMMIT_MESSAGE//\"/\'}"
+echo "3"
 COMMIT_MESSAGE=$(echo "${COMMIT_MESSAGE}" | sed -e 's/\([\]n\)*[(]cherry picked from commit \([a-f0-9]*\)[)]$//g')
+echo "4"
 END_OF_LINES=$(echo $COMMIT_MESSAGE | grep -o '\\n' | wc -l)
+echo "5"
 if [[ "${END_OF_LINES}" == "1" ]] && [[ "${COMMIT_MESSAGE}" =~ ^[\[].*[\]][\\n].*$ ]] ; then
+    echo "6"
     COMMIT_MESSAGE="${COMMIT_MESSAGE/\\n/ }"
 fi
 echo "COMMIT_MESSAGE: ${COMMIT_MESSAGE}"
