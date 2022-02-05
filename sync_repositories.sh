@@ -21,7 +21,7 @@ sync_repository() {
     UPSTREAM_SHA=$(git log --format=%H -n 1 upstream/${BRANCH})
     
     git merge --no-commit upstream/${BRANCH}
-    if git commit -m "${UPSTREAM_MESSAGE}"$'\n'$'\n'"(cherry picked from commit ${UPSTREAM_SHA})" --author "${UPSTREAM_NAME} <${UPSTREAM_EMAIL}>" ; then
+    if git commit -m "${UPSTREAM_MESSAGE}"$'\n'$'\n'"(changes from upstream commit ${UPSTREAM_SHA})" --author "${UPSTREAM_NAME} <${UPSTREAM_EMAIL}>" ; then
         echo "Pushing!"
         echo git push "https://...:...@github.com/${USER}/${CORE_NAME}.git" origin "${BRANCH}"
         git push "https://${DISPATCH_USER}:${DISPATCH_TOKEN}@github.com/${USER}/${CORE_NAME}.git" "${BRANCH}"
