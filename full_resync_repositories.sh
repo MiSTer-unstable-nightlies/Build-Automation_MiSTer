@@ -19,7 +19,10 @@ full_resync_repository() {
     git checkout -f "${BRANCH}"
     git add .github
     git commit -m "Added ci_build.yml"
-    git push --force origin "${BRANCH}"
+
+    echo "Force Push!"
+    echo git push --force "https://...:...@github.com/${USER}/${CORE_NAME}.git" origin "${BRANCH}"
+    git push --force "https://${DISPATCH_USER}:${DISPATCH_TOKEN}@github.com/${USER}/${CORE_NAME}.git" "${BRANCH}"
 
     popd > /dev/null
     rm -rf "${RESYNC_DIR_TMP}"
