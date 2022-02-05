@@ -14,35 +14,19 @@ sync_repository() {
     pushd "${SYNC_DIR_TMP}" > /dev/null
     git remote add upstream "${UPSTREAM}"
     git fetch upstream
-
-    local LAST_BOT_COMMIT=$(git log --pretty=format:"%cn %H" | grep "Unstable Nightlies Bot" | head -n 1 | awk '{print $4}')
-    local CHERRY_PICK_COMMIT=
-
-    if [[ "${LAST_BOT_COMMIT}" != "" ]] ; then
-        CHERRY_PICK_COMMIT=$(git log --format=%B -n 1 ${LAST_BOT_COMMIT} 2> /dev/null | awk NF | tail -n 1 | awk '{print $5}' | sed 's/.$//')
-    fi
-
-    local PUSH="false"
-    if [[ "${LAST_BOT_COMMIT}" != "" ]] && [[ "${CHERRY_PICK_COMMIT}" != "" ]] ; then
-        echo "LAST_BOT_COMMIT: ${LAST_BOT_COMMIT}"
-        echo "CHERRY_PICK_COMMIT: ${CHERRY_PICK_COMMIT}"
-        echo
-        echo "Cherry Pick ${CHERRY_PICK_COMMIT}..upstream/${BRANCH}"
-        if git cherry-pick -x ${CHERRY_PICK_COMMIT}..upstream/${BRANCH} ; then
-            PUSH="true"
-        fi
-    else
-        echo "Cherry Pick HEAD..upstream/${BRANCH}"
-        if git cherry-pick -x HEAD..upstream/${BRANCH} ; then
-            PUSH="true"
-        fi
-    fi
-
-    if [[ "${PUSH}" == "true" ]] ; then
+    
+    UPSTREAM_MESSAGE=$(git log --format=%B -n 1 upstream/${BRANCH})
+    UPSTREAM_EMAIL=$(git log --format=%ae -n 1 upstream/${BRANCH})
+    UPSTREAM_NAME=$(git log --format=%an -n 1 upstream/${BRANCH})
+    UPSTREAM_SHA=$(git log --format=%H -n 1 upstream/${BRANCH})
+    
+    git merge --no-commit upstream/${BRANCH}
+    if git commit -m "${UPSTREAM_MESSAGE}\n\n(cherry picked from commit ${UPSTREAM_SHA})" --author "${UPSTREAM_NAME} <${UPSTREAM_EMAIL}>" ; then
         echo "Pushing!"
         echo git push "https://...:...@github.com/${USER}/${CORE_NAME}.git" origin "${BRANCH}"
         git push "https://${DISPATCH_USER}:${DISPATCH_TOKEN}@github.com/${USER}/${CORE_NAME}.git" "${BRANCH}"
     fi
+
     popd > /dev/null
     rm -rf "${SYNC_DIR_TMP}"
 }
