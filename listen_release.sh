@@ -10,7 +10,7 @@ echo "COMMIT_SHA: ${COMMIT_SHA}"
 
 COMMIT_MESSAGE="${COMMIT_MESSAGE//$'\n'/\\n}"
 COMMIT_MESSAGE="${COMMIT_MESSAGE//\"/\'}"
-COMMIT_MESSAGE=$(echo "${COMMIT_MESSAGE}" | sed -e 's/\([\]n\)*[(]cherry picked from commit \([a-f0-9]*\)[)]$//g')
+COMMIT_MESSAGE=$(echo "${COMMIT_MESSAGE}" | sed -e 's/\([\]n\)*[(]changes from upstream commit \([a-f0-9]*\)[)]$//g')
 set +e
 END_OF_LINES=$(echo $COMMIT_MESSAGE | grep -o '\\n' | wc -l)
 set -e
