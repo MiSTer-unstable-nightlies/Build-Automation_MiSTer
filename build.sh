@@ -268,8 +268,8 @@ gh release upload "${RELEASE_TAG}" commit.txt --clobber
 
 rm -rf "${CURRENT_BUILD_FOLDER_TMP}" 2> /dev/null || true
 
-COMMIT_MESSAGE_HEADER="$(git log --pretty='format:[%an %as %h]' -n1)"
-COMMIT_MESSAGE_BODY="$(git log --pretty='%B' -n1)"
+COMMIT_MESSAGE_HEADER="$(git log --pretty='format:[%an %as %h]' -n1 ${GITHUB_SHA})"
+COMMIT_MESSAGE_BODY="$(git log --pretty='%B' -n1 ${GITHUB_SHA})"
 if [[ $COMMIT_MESSAGE_BODY == *$'\n'* ]] ; then
     COMMIT_MESSAGE="${COMMIT_MESSAGE_HEADER}\n${COMMIT_MESSAGE_BODY}"
 else
