@@ -268,8 +268,8 @@ gh release upload "${RELEASE_TAG}" commit.txt --clobber
 
 rm -rf "${CURRENT_BUILD_FOLDER_TMP}" 2> /dev/null || true
 
-COMMIT_MESSAGE_HEADER="$(git log --invert-grep --author=theypsilon@gmail.com --pretty='format:[%an %as %h]' -n1)"
-COMMIT_MESSAGE_BODY="$(git log --invert-grep --author=theypsilon@gmail.com --pretty='%B' -n1)"
+COMMIT_MESSAGE_HEADER="$(git log --pretty='format:[%an %as %h]' -n1)"
+COMMIT_MESSAGE_BODY="$(git log --pretty='%B' -n1)"
 if [[ $COMMIT_MESSAGE_BODY == *$'\n'* ]] ; then
     COMMIT_MESSAGE="${COMMIT_MESSAGE_HEADER}\n${COMMIT_MESSAGE_BODY}"
 else
