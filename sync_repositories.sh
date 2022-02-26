@@ -16,6 +16,7 @@ sync_repository() {
     git fetch upstream
     
     UPSTREAM_MESSAGE=$(git log --format=%B -n 1 upstream/${BRANCH})
+    UPSTREAM_MESSAGE="${UPSTREAM_MESSAGE//\(MiSTer-devel#[0-9]*\)/}"
     UPSTREAM_EMAIL=$(git log --format=%ae -n 1 upstream/${BRANCH})
     UPSTREAM_NAME=$(git log --format=%an -n 1 upstream/${BRANCH})
     UPSTREAM_SHA=$(git log --format=%H -n 1 upstream/${BRANCH})
