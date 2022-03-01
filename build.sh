@@ -250,12 +250,12 @@ docker run --rm artifact > "${RELEASE_FILE}"
 RELEASE_FILE_URL="https://github.com/${REPOSITORY}/releases/download/${RELEASE_TAG}/${RELEASE_FILE}"
 echo "Uploading release to ${RELEASE_FILE_URL}"
 
-sleep $((BUILD_INDEX * 60))
-
 if ! gh release list | grep -q "${RELEASE_TAG}" ; then
     gh release create "${RELEASE_TAG}" -p || true
     sleep 15s
 fi
+
+sleep $((BUILD_INDEX * 150))
 
 if gh release view "${RELEASE_TAG}" | grep -q "${RELEASE_FILE}" ; then
     echo
