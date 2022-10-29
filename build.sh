@@ -128,13 +128,13 @@ echo "EXTRA_DOCKERIGNORE_LINE: ${EXTRA_DOCKERIGNORE_LINE:-}"
 
 cp "${BUILD_AUTOMATION_DIR_TMP}/Build-Automation_MiSTer-main/templates/Dockerfile" .
 cp "${BUILD_AUTOMATION_DIR_TMP}/Build-Automation_MiSTer-main/templates/Dockerfile.file-filter" .
-cp "${BUILD_AUTOMATION_DIR_TMP}/Build-Automation_MiSTer-main/templates/.dockerignore" .
+cp "${BUILD_AUTOMATION_DIR_TMP}/Build-Automation_MiSTer-main/templates/.dockerignore" "${DOCKER_FOLDER}"
 
 rm -rf "${BUILD_AUTOMATION_DIR_TMP}"
 
 if [[ "${EXTRA_DOCKERIGNORE_LINE:-}" != "" ]] ; then
-    echo "${EXTRA_DOCKERIGNORE_LINE}" >> .dockerignore
-    echo >> .dockerignore
+    echo "${EXTRA_DOCKERIGNORE_LINE}" >> "${DOCKER_FOLDER}/".dockerignore
+    echo >> "${DOCKER_FOLDER}/".dockerignore
 fi
 
 FILE_EXTENSION="${COMPILATION_OUTPUT##*.}"
@@ -158,7 +158,7 @@ echo
 echo "Grabbing current files..."
 
 CURRENT_BUILD_FOLDER_TMP=$(mktemp -d)
-docker build -f Dockerfile.file-filter -t filtered_files .
+docker build -f Dockerfile.file-filter -t filtered_files "${DOCKER_FOLDER}"
 docker cp $(docker create --rm filtered_files):/files "${CURRENT_BUILD_FOLDER_TMP}/"
 CURRENT_BUILD_DIR="${CURRENT_BUILD_FOLDER_TMP}/files"
 
@@ -176,7 +176,7 @@ else
 
     git checkout -f "${LAST_RELEASE_COMMIT}" > /dev/null 2>&1 
     LAST_RELEASE_FOLDER_TMP=$(mktemp -d)
-    docker build -f Dockerfile.file-filter -t filtered_files .
+    docker build -f Dockerfile.file-filter -t filtered_files "${DOCKER_FOLDER}"
     docker cp $(docker create --rm filtered_files):/files "${LAST_RELEASE_FOLDER_TMP}/"
     LAST_RELEASE_DIR="${LAST_RELEASE_FOLDER_TMP}/files"
 
@@ -249,7 +249,7 @@ if [[ "${RANDOMIZE_SEED}" == "true" ]] ; then
     echo "set_global_assignment -name SEED ${RND}" >> ${CORE_NAME}.qsf
 fi
 
-docker build -t artifact "${DOCKER_FOLDER}"
+docker build -f Dockerfile -t artifact "${DOCKER_FOLDER}"
 docker run --rm artifact > "${RELEASE_FILE}"
 
 RELEASE_FILE_URL="https://github.com/${REPOSITORY}/releases/download/${RELEASE_TAG}/${RELEASE_FILE}"
