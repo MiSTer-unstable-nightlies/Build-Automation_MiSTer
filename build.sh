@@ -105,6 +105,11 @@ if [[ "${DOCKER_IMAGE:-}" == "" ]] ; then
 fi
 echo "DOCKER_IMAGE: ${DOCKER_IMAGE}"
 
+if [[ "${DOCKER_FOLDER:-}" == "" ]] ; then
+    DOCKER_FOLDER="."
+fi
+echo "DOCKER_FOLDER: ${DOCKER_FOLDER}"
+
 if [[ "${COMPILATION_COMMAND:-}" == "" ]] ; then
     COMPILATION_COMMAND="/opt/intelFPGA_lite/quartus/bin/quartus_sh --flow compile ${CORE_NAME}.qpf"
 fi
@@ -244,7 +249,7 @@ if [[ "${RANDOMIZE_SEED}" == "true" ]] ; then
     echo "set_global_assignment -name SEED ${RND}" >> ${CORE_NAME}.qsf
 fi
 
-docker build -t artifact .
+docker build -t artifact "${DOCKER_FOLDER}"
 docker run --rm artifact > "${RELEASE_FILE}"
 
 RELEASE_FILE_URL="https://github.com/${REPOSITORY}/releases/download/${RELEASE_TAG}/${RELEASE_FILE}"
