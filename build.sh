@@ -76,18 +76,18 @@ unzip -q "${BUILD_AUTOMATION_DIR_TMP}/tmp.zip" -d "${BUILD_AUTOMATION_DIR_TMP}"
 
 echo
 echo "Arguments"
-REPOSITORY_DOMAIN="${REPOSITORY%%/*}"
-REPOSITORY_NAME="${REPOSITORY##*/}"
-echo "REPOSITORY_DOMAIN: ${REPOSITORY_DOMAIN}"
-echo "REPOSITORY_NAME: ${REPOSITORY_NAME}"
+if [[ "${PROJECT_NAME:-}" == "" ]] ; then
+    PROJECT_NAME="${REPOSITORY##*/}"
+fi
+echo "PROJECT_NAME: ${PROJECT_NAME}"
 
 source <(cat "${BUILD_AUTOMATION_DIR_TMP}/Build-Automation_MiSTer-main/repositories.ini" | python3 -c "
 import sys, configparser
 config = configparser.ConfigParser()
 config.read_file(sys.stdin)
-if config.has_section('${REPOSITORY_NAME}'):
-    for var in config['${REPOSITORY_NAME}'].keys():
-        print('%s=\${%s:-\"%s\"}' % (var.upper(), var.upper(), config['${REPOSITORY_NAME}'][var].strip('\"')))
+if config.has_section('${PROJECT_NAME}'):
+    for var in config['${PROJECT_NAME}'].keys():
+        print('%s=\${%s:-\"%s\"}' % (var.upper(), var.upper(), config['${PROJECT_NAME}'][var].strip('\"')))
 ")
 
 if [[ "${RELEASE_TAG:-}" == "" ]] ; then
@@ -96,7 +96,7 @@ fi
 echo "RELEASE_TAG: ${RELEASE_TAG}"
 
 if [[ "${CORE_NAME:-}" == "" ]] ; then
-    CORE_NAME="${REPOSITORY_NAME%%???????}"
+    CORE_NAME="${PROJECT_NAME%%???????}"
 fi
 echo "CORE_NAME: ${CORE_NAME}"
 
