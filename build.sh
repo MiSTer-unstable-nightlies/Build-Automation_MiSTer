@@ -121,7 +121,7 @@ fi
 echo "COMPILATION_OUTPUT: ${COMPILATION_OUTPUT}"
 
 if [[ "${RANDOMIZE_SEED:-}" == "" ]] ; then
-    RANDOMIZE_SEED="false"
+    RANDOMIZE_SEED=""
 fi
 echo "RANDOMIZE_SEED: ${RANDOMIZE_SEED}"
 echo "EXTRA_DOCKERIGNORE_LINE: ${EXTRA_DOCKERIGNORE_LINE:-}"
@@ -242,11 +242,11 @@ sed -i "s%<<DOCKER_IMAGE>>%${DOCKER_IMAGE}%g" Dockerfile
 sed -i "s%<<COMPILATION_COMMAND>>%${COMPILATION_COMMAND}%g" Dockerfile
 sed -i "s%<<COMPILATION_OUTPUT>>%${COMPILATION_OUTPUT}%g" Dockerfile
 
-if [[ "${RANDOMIZE_SEED}" == "true" ]] ; then
+if [[ "${RANDOMIZE_SEED}" != "" ]] ; then
     RND="$RANDOM"
     echo "RANDOM SEED: ${RND}"
-    echo >> ${CORE_NAME}.qsf
-    echo "set_global_assignment -name SEED ${RND}" >> ${CORE_NAME}.qsf
+    echo >> ${RANDOMIZE_SEED}
+    echo "set_global_assignment -name SEED ${RND}" >> ${RANDOMIZE_SEED}
 fi
 
 docker build -f Dockerfile -t artifact "${DOCKER_FOLDER}"
