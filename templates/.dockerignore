@@ -7,6 +7,7 @@ Dockerfile*
 palettes/
 .dockerignore
 .gitignore
+**/.git
 .git
 .github
 .DS_Store
@@ -16,4 +17,4 @@ palettes/
 *.[mM][dD]
 *.[pP][nN][gG]
 *.[gG][iI][fF]
-LatestBuild.zip
+LatestBuild*.zip
