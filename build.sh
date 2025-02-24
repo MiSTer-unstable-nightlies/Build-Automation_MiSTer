@@ -198,7 +198,7 @@ fi
 
 echo
 echo "Grabbing files from latest unstable build..."
-PREVIOUS_BUILD_ZIP="LatestBuild${RELEASE_NAME}.zip"
+PREVIOUS_BUILD_ZIP="LatestBuild${CORE_NAME}.zip"
 export GITHUB_TOKEN="${GITHUB_TOKEN}"
 if gh release download "${RELEASE_TAG}" --pattern "${PREVIOUS_BUILD_ZIP}" 2> /dev/null ; then
     PREVIOUS_BUILD_DIR_TMP=$(mktemp -d)
