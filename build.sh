@@ -100,6 +100,11 @@ if [[ "${CORE_NAME:-}" == "" ]] ; then
 fi
 echo "CORE_NAME: ${CORE_NAME}"
 
+if [[ "${RELEASE_NAME:-}" == "" ]] ; then
+    RELEASE_NAME="${CORE_NAME}"
+fi
+echo "RELEASE_NAME: ${RELEASE_NAME}"
+
 if [[ "${DOCKER_IMAGE:-}" == "" ]] ; then
     DOCKER_IMAGE="theypsilon/quartus-lite-c5:17.0.2.docker0"
 fi
@@ -145,7 +150,7 @@ fi
 
 echo
 echo "Current commit: ${GITHUB_SHA}"
-RELEASE_NAME="${RELEASE_NAME:-${CORE_NAME}}"
+
 LAST_RELEASE_FILE=
 if [ -d releases/ ] ; then
     LAST_RELEASE_FILE=$(cd releases/ ; git ls-files -z | xargs -0 -n1 -I{} -- git log -1 --format="%ai {}" {} | grep "${RELEASE_NAME}" | sort | tail -n1 | awk '{ print substr($0, index($0,$4)) }')
