@@ -34,7 +34,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Listen Release
+    - name: Listen Release Discord Official
       run: ./listen_release.sh
       env:
         RELEASE_FILE_URL: ${{ github.event.inputs.release_file_url }}
@@ -44,3 +44,14 @@ jobs:
         COMMIT_SHA: ${{ github.event.inputs.commit_sha }}
         COMMIT_MESSAGE: ${{ github.event.inputs.commit_msg }}
         WEBHOOK_URL: ${{ secrets.DISCORD_NIGHTLIES_WEBHOOK_URL }}
+
+    - name: Listen Release Discord theypsilon
+      run: ./listen_release.sh
+      env:
+        RELEASE_FILE_URL: ${{ github.event.inputs.release_file_url }}
+        CORE_NAME: ${{ github.event.inputs.core_name }}
+        REPOSITORY: ${{ github.event.inputs.repository }}
+        RELEASE_TAG: ${{ github.event.inputs.release_tag }}
+        COMMIT_SHA: ${{ github.event.inputs.commit_sha }}
+        COMMIT_MESSAGE: ${{ github.event.inputs.commit_msg }}
+        WEBHOOK_URL: ${{ secrets.DISCORD_THEYPSILON_NIGHTLIES_WEBHOOK_URL }}
