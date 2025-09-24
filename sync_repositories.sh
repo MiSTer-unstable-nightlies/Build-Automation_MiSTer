@@ -21,12 +21,16 @@ sync_repository() {
     UPSTREAM_EMAIL=$(git log --format=%ae -n 1 upstream/${BRANCH})
     UPSTREAM_NAME=$(git log --format=%an -n 1 upstream/${BRANCH})
     UPSTREAM_SHA=$(git log --format=%H -n 1 upstream/${BRANCH})
-    
+
+    echo "Merging upstream/${BRANCH}..."
     git merge --no-commit upstream/${BRANCH}
+    echo "Ok."
     if git commit -m "${UPSTREAM_MESSAGE}" --author "${UPSTREAM_NAME} <${UPSTREAM_EMAIL}>" ; then
         echo "Pushing!"
         echo git push "https://...:...@github.com/${USER}/${CORE_NAME}.git" origin "${BRANCH}"
         git push "https://${DISPATCH_USER}:${DISPATCH_TOKEN}@github.com/${USER}/${CORE_NAME}.git" "${BRANCH}"
+    else
+        echo "No need to push."
     fi
 
     popd > /dev/null
