@@ -2,6 +2,7 @@
 set -euo pipefail
 
 SYNC_DIR_TMP="$(mktemp -d)"
+ERROR=0
 
 sync_repository() {
     local ORIGIN="${1}"
@@ -23,12 +24,26 @@ sync_repository() {
     UPSTREAM_SHA=$(git log --format=%H -n 1 upstream/${BRANCH})
 
     echo "Merging upstream/${BRANCH}..."
-    git merge --no-commit upstream/${BRANCH}
-    echo "Ok."
-    if git commit -m "${UPSTREAM_MESSAGE}" --author "${UPSTREAM_NAME} <${UPSTREAM_EMAIL}>" ; then
+    if ! git merge --no-commit upstream/${BRANCH} ; then
+        echo "WARNING: Merge failed!"
+    fi
+    if ! git commit -m "${UPSTREAM_MESSAGE}" --author "${UPSTREAM_NAME} <${UPSTREAM_EMAIL}>" ; then
+        echo "WARNING: Commit failed!"
+    fi
+
+    local BEHIND AHEAD
+    read BEHIND AHEAD < <(git rev-list --left-right --count "origin/${BRANCH}...HEAD")
+
+    if [[ $AHEAD -gt 0 && $BEHIND -eq 0 ]]; then
         echo "Pushing!"
         echo git push "https://...:...@github.com/${USER}/${CORE_NAME}.git" origin "${BRANCH}"
         git push "https://${DISPATCH_USER}:${DISPATCH_TOKEN}@github.com/${USER}/${CORE_NAME}.git" "${BRANCH}"
+    elif [[ $BEHIND -gt 0 && $AHEAD -eq 0 ]]; then
+        echo "ERROR: We are behind! Try again later."
+        ERROR=1
+    elif [[ $BEHIND -gt 0 && $AHEAD -gt 0 ]]; then
+        echo "ERROR: Branches diverged!"
+        ERROR=1
     else
         echo "No need to push."
     fi
@@ -71,3 +86,4 @@ for name in $(cat repos.json | jq -r '.[] | .name') ; do
 done
 
 echo "Done."
+exit ${ERROR}
