@@ -153,7 +153,7 @@ echo "Current commit: ${GITHUB_SHA}"
 
 LAST_RELEASE_FILE=
 if [ -d releases/ ] ; then
-    LAST_RELEASE_FILE=$(cd releases/ ; git ls-files -z | xargs -0 -I{} -- git log -1 --format="%ai {}" {} | grep "${RELEASE_NAME}" | sort | tail -n1 | awk '{ print substr($0, index($0,$4)) }')
+    LAST_RELEASE_FILE=$(cd releases/ ; git ls-files -z | xargs -0 -I{} -- git log -1 --format="%ai {}" {} | grep "${RELEASE_NAME}" | sort | tail -n1 | awk '{ print substr($0, index($0,$4)) }') || true
 fi
 
 git fetch origin --unshallow 2> /dev/null || true
