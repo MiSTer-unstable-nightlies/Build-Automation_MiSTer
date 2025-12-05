@@ -280,6 +280,7 @@ if [[ "${RANDOMIZE_SEED}" != "" ]] ; then
     echo "set_global_assignment -name SEED ${RND}" >> "${RANDOMIZE_SEED}"
 fi
 
+export DOCKER_BUILDKIT=0 
 docker build --progress=plain -f Dockerfile -t artifact "${DOCKER_FOLDER}" 2>&1 | tee docker-build.log
 docker run --rm artifact > "${RELEASE_FILE}"
 
