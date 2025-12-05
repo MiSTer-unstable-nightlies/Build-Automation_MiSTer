@@ -278,8 +278,10 @@ if [[ "${RANDOMIZE_SEED}" != "" ]] ; then
     echo "set_global_assignment -name SEED ${RND}" >> "${RANDOMIZE_SEED}"
 fi
 
-export DOCKER_BUILDKIT=0 
-docker build -f Dockerfile -t artifact "${DOCKER_FOLDER}" 2>&1 | tee docker-build.log
+docker buildx create --bootstrap --use --name buildkit-unlimited-logs \
+    --driver-opt env.BUILDKIT_STEP_LOG_MAX_SIZE=-1 \
+    --driver-opt env.BUILDKIT_STEP_LOG_MAX_SPEED=-1
+docker buildx build -f Dockerfile -t artifact "${DOCKER_FOLDER}" 2>&1 | tee docker-build.log
 docker run --rm artifact > "${RELEASE_FILE}"
 
 RELEASE_FILE_URL="https://github.com/${REPOSITORY}/releases/download/${RELEASE_TAG}/${RELEASE_FILE}"
