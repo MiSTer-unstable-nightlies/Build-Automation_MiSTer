@@ -1,71 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DISPATCH_URL="${DISPATCH_URL:-https://api.github.com/repos/MiSTer-unstable-nightlies/Build-Automation_MiSTer/actions/workflows/listen_releases.yml/dispatches}"
-DISPATCH_REF="${DISPATCH_REF:-refs/heads/main}"
 ARCHIVE_URL="https://github.com/MiSTer-unstable-nightlies/Build-Automation_MiSTer/archive/main.zip"
-BUILD_INDEX="${BUILD_INDEX:-0}"
-
-FIND_DIFFERENCES_BETWEEN_DIRECTORIES_RET=
-find_differences_between_directories()
-{
-    local CURRENT_BUILD_DIR="${1}"
-    local OTHER_BUILD_DIR="${2}"
-
-    local CHANGES_DETECTED="false"
-    local CURRENT_BUILD_FILES_TMP=$(mktemp)
-    local OTHER_BUILD_FILES_TMP=$(mktemp)
-
-    pushd "${CURRENT_BUILD_DIR}" > /dev/null
-    find . > "${CURRENT_BUILD_FILES_TMP}"
-    popd > /dev/null
-    pushd "${OTHER_BUILD_DIR}" > /dev/null
-    find . > "${OTHER_BUILD_FILES_TMP}"
-    popd > /dev/null
-
-    local CURRENT_BUILD_QTY=$(cat "${CURRENT_BUILD_FILES_TMP}" | wc -l | awk '{print $1}')
-    local OTHER_BUILD_QTY=$(cat "${OTHER_BUILD_FILES_TMP}" | wc -l | awk '{print $1}')
-
-    if ! git diff --exit-code "${OTHER_BUILD_FILES_TMP}" "${CURRENT_BUILD_FILES_TMP}" ; then
-        CHANGES_DETECTED="true"
-
-        echo
-        echo "Found differences"
-        echo "Current build #files: ${CURRENT_BUILD_QTY}"
-        echo "Other build #files: ${OTHER_BUILD_QTY}"
-    else
-        local CHANGED_FILES=()
-        while IFS="" read -r line || [ -n "${line}" ]
-        do
-            LINE_PATH_1="${OTHER_BUILD_DIR}/${line}"
-            LINE_PATH_2="${CURRENT_BUILD_DIR}/${line}"
-
-            if [ ! -f "${LINE_PATH_1}" ] && [ ! -f "${LINE_PATH_2}" ] ; then continue ; fi
-            if [ ! -f "${LINE_PATH_2}" ] ; then echo "UNEXPEXTED: File ${LINE_PATH_2} doesn't exist!" ; exit 1 ; fi
-            if [ ! -f "${LINE_PATH_1}" ] ; then echo "UNEXPEXTED: File ${LINE_PATH_1} doesn't exist!" ; exit 1 ; fi
-
-            if ! git diff --exit-code --ignore-space-at-eol "${LINE_PATH_1}" "${LINE_PATH_2}" ; then
-                echo
-                echo "Found differences"
-                echo
-                CHANGED_FILES+=( "${line}" )
-            fi
-        done < "${CURRENT_BUILD_FILES_TMP}"
-
-        if [ ${#CHANGED_FILES[@]} -ge 1 ] ; then
-            CHANGES_DETECTED="true"
-            echo "Following files have changes: "
-            for changed_file in "${CHANGED_FILES[@]}"
-            do
-                echo "${changed_file}"
-            done
-        fi
-    fi
-
-    rm -rf "${CURRENT_BUILD_FILES_TMP}"
-    rm -rf "${OTHER_BUILD_FILES_TMP}"
-    FIND_DIFFERENCES_BETWEEN_DIRECTORIES_RET="${CHANGES_DETECTED}"
-}
 
 echo
 echo "Unpacking ${ARCHIVE_URL}"
@@ -89,6 +25,21 @@ if config.has_section('${PROJECT_NAME}'):
     for var in config['${PROJECT_NAME}'].keys():
         print('%s=\${%s:-\"%s\"}' % (var.upper(), var.upper(), config['${PROJECT_NAME}'][var].strip('\"')))
 ")
+
+if [[ "${DISPATCH_URL:-}" == "" ]] ; then
+    DISPATCH_URL="https://api.github.com/repos/MiSTer-unstable-nightlies/Build-Automation_MiSTer/actions/workflows/listen_releases.yml/dispatches"
+fi
+echo "DISPATCH_URL: ${DISPATCH_URL}"
+
+if [[ "${DISPATCH_REF:-}" == "" ]] ; then
+    DISPATCH_REF="refs/heads/main"
+fi
+echo "DISPATCH_REF: ${DISPATCH_REF}"
+
+if [[ "${BUILD_INDEX:-}" == "" ]] ; then
+    BUILD_INDEX="0"
+fi
+echo "BUILD_INDEX: ${BUILD_INDEX}"
 
 if [[ "${RELEASE_TAG:-}" == "" ]] ; then
     RELEASE_TAG="unstable-builds"
@@ -129,7 +80,17 @@ if [[ "${RANDOMIZE_SEED:-}" == "" ]] ; then
     RANDOMIZE_SEED=""
 fi
 echo "RANDOMIZE_SEED: ${RANDOMIZE_SEED}"
-echo "EXTRA_DOCKERIGNORE_LINE: ${EXTRA_DOCKERIGNORE_LINE:-}"
+
+if [[ "${SKIP_DIFF_CHECK:-}" == "" ]] ; then
+    SKIP_DIFF_CHECK="false"
+fi
+echo "SKIP_DIFF_CHECK: ${SKIP_DIFF_CHECK}"
+
+if [[ "${EXTRA_DOCKERIGNORE_LINE:-}" == "" ]] ; then
+    EXTRA_DOCKERIGNORE_LINE=""
+fi
+echo "EXTRA_DOCKERIGNORE_LINE: ${EXTRA_DOCKERIGNORE_LINE}"
+echo
 
 cp "${BUILD_AUTOMATION_DIR_TMP}/Build-Automation_MiSTer-main/templates/Dockerfile" .
 cp "${BUILD_AUTOMATION_DIR_TMP}/Build-Automation_MiSTer-main/templates/Dockerfile.file-filter" .
@@ -137,7 +98,7 @@ cp "${BUILD_AUTOMATION_DIR_TMP}/Build-Automation_MiSTer-main/templates/.dockerig
 
 rm -rf "${BUILD_AUTOMATION_DIR_TMP}"
 
-if [[ "${EXTRA_DOCKERIGNORE_LINE:-}" != "" ]] ; then
+if [[ "${EXTRA_DOCKERIGNORE_LINE}" != "" ]] ; then
     echo "${EXTRA_DOCKERIGNORE_LINE}" >> "${DOCKER_FOLDER}/".dockerignore
     echo >> "${DOCKER_FOLDER}/".dockerignore
 fi
@@ -166,73 +127,136 @@ CURRENT_BUILD_FOLDER_TMP=$(mktemp -d)
 docker build -f Dockerfile.file-filter -t filtered_files "${DOCKER_FOLDER}"
 docker cp $(docker create --rm filtered_files):/files "${CURRENT_BUILD_FOLDER_TMP}/"
 CURRENT_BUILD_DIR="${CURRENT_BUILD_FOLDER_TMP}/files"
-
-DIFFERENCES_FOUND_WITH_LATEST_RELEASE="true"
-if [[ "${LAST_RELEASE_FILE}" == "" ]] ; then
-    echo
-    echo "No release files in this repository"
-else
-    echo
-    echo "Found latest release: ${LAST_RELEASE_FILE}"
-    LAST_RELEASE_COMMIT=$(git log -n 1 --pretty=format:%H -- "releases/${LAST_RELEASE_FILE}")
-    echo "    @ commit: ${LAST_RELEASE_COMMIT}"
-    echo
-    echo "Grabbing latest release files..."
-
-    git checkout -f "${LAST_RELEASE_COMMIT}" > /dev/null 2>&1 
-    LAST_RELEASE_FOLDER_TMP=$(mktemp -d)
-    docker build -f Dockerfile.file-filter -t filtered_files "${DOCKER_FOLDER}"
-    docker cp $(docker create --rm filtered_files):/files "${LAST_RELEASE_FOLDER_TMP}/"
-    LAST_RELEASE_DIR="${LAST_RELEASE_FOLDER_TMP}/files"
-
-    git checkout -f "${GITHUB_SHA}" > /dev/null 2>&1
-
-    echo
-    echo "Calculating differences with latest release..."
-
-    find_differences_between_directories "${CURRENT_BUILD_DIR}" "${LAST_RELEASE_DIR}"
-    DIFFERENCES_FOUND_WITH_LATEST_RELEASE="${FIND_DIFFERENCES_BETWEEN_DIRECTORIES_RET}"
-    rm -rf "${LAST_RELEASE_FOLDER_TMP}"
-    echo "Differences found with latest release: ${DIFFERENCES_FOUND_WITH_LATEST_RELEASE}"
-fi
-
-echo
-echo "Grabbing files from latest unstable build..."
 PREVIOUS_BUILD_ZIP="LatestBuild${CORE_NAME}.zip"
-export GITHUB_TOKEN="${GITHUB_TOKEN}"
-if gh release download "${RELEASE_TAG}" --pattern "${PREVIOUS_BUILD_ZIP}" 2> /dev/null ; then
-    PREVIOUS_BUILD_DIR_TMP=$(mktemp -d)
-    unzip -q "${PREVIOUS_BUILD_ZIP}" -d "${PREVIOUS_BUILD_DIR_TMP}"
-    rm "${PREVIOUS_BUILD_ZIP}"
-    echo "Done."
-else
-    echo "No previous unstable build found."
-fi
 
-echo
-echo "Calculating differences with previous unstable build..."
-DIFFERENCES_FOUND_WITH_PREVIOUS_BUILD="true"
-if [[ "${PREVIOUS_BUILD_DIR_TMP:-}" != "" ]] ; then
-    find_differences_between_directories "${CURRENT_BUILD_DIR}" "${PREVIOUS_BUILD_DIR_TMP}"
-    DIFFERENCES_FOUND_WITH_PREVIOUS_BUILD="${FIND_DIFFERENCES_BETWEEN_DIRECTORIES_RET}"
-    rm -rf "${PREVIOUS_BUILD_DIR_TMP}"
-else
-    echo "There wasn't a previous unstable build!"
-fi
-echo "Differences found with previous unstable build: ${DIFFERENCES_FOUND_WITH_PREVIOUS_BUILD}"
+if [[ "${SKIP_DIFF_CHECK}" != "true" ]] ; then
 
-if [[ "${DIFFERENCES_FOUND_WITH_LATEST_RELEASE}" != "true" ]] || [[ "${DIFFERENCES_FOUND_WITH_PREVIOUS_BUILD}" != "true" ]] ; then
-    rm -rf "${CURRENT_BUILD_FOLDER_TMP}" 2> /dev/null || true
-    echo
-    if [[ "${DIFFERENCES_FOUND_WITH_LATEST_RELEASE}" != "true" ]] ; then
-        echo "No changes detected since the latest release from upstream."
+    FIND_DIFFERENCES_BETWEEN_DIRECTORIES_RET=
+    find_differences_between_directories()
+    {
+        local CURRENT_BUILD_DIR="${1}"
+        local OTHER_BUILD_DIR="${2}"
+
+        local CHANGES_DETECTED="false"
+        local CURRENT_BUILD_FILES_TMP=$(mktemp)
+        local OTHER_BUILD_FILES_TMP=$(mktemp)
+
+        pushd "${CURRENT_BUILD_DIR}" > /dev/null
+        find . > "${CURRENT_BUILD_FILES_TMP}"
+        popd > /dev/null
+        pushd "${OTHER_BUILD_DIR}" > /dev/null
+        find . > "${OTHER_BUILD_FILES_TMP}"
+        popd > /dev/null
+
+        local CURRENT_BUILD_QTY=$(cat "${CURRENT_BUILD_FILES_TMP}" | wc -l | awk '{print $1}')
+        local OTHER_BUILD_QTY=$(cat "${OTHER_BUILD_FILES_TMP}" | wc -l | awk '{print $1}')
+
+        if ! git diff --exit-code "${OTHER_BUILD_FILES_TMP}" "${CURRENT_BUILD_FILES_TMP}" ; then
+            CHANGES_DETECTED="true"
+
+            echo
+            echo "Found differences"
+            echo "Current build #files: ${CURRENT_BUILD_QTY}"
+            echo "Other build #files: ${OTHER_BUILD_QTY}"
+        else
+            local CHANGED_FILES=()
+            while IFS="" read -r line || [ -n "${line}" ]
+            do
+                LINE_PATH_1="${OTHER_BUILD_DIR}/${line}"
+                LINE_PATH_2="${CURRENT_BUILD_DIR}/${line}"
+
+                if [ ! -f "${LINE_PATH_1}" ] && [ ! -f "${LINE_PATH_2}" ] ; then continue ; fi
+                if [ ! -f "${LINE_PATH_2}" ] ; then echo "UNEXPECTED: File ${LINE_PATH_2} doesn't exist!" ; exit 1 ; fi
+                if [ ! -f "${LINE_PATH_1}" ] ; then echo "UNEXPECTED: File ${LINE_PATH_1} doesn't exist!" ; exit 1 ; fi
+
+                if ! git diff --exit-code --ignore-space-at-eol "${LINE_PATH_1}" "${LINE_PATH_2}" ; then
+                    echo
+                    echo "Found differences"
+                    echo
+                    CHANGED_FILES+=( "${line}" )
+                fi
+            done < "${CURRENT_BUILD_FILES_TMP}"
+
+            if [ ${#CHANGED_FILES[@]} -ge 1 ] ; then
+                CHANGES_DETECTED="true"
+                echo "Following files have changes: "
+                for changed_file in "${CHANGED_FILES[@]}"
+                do
+                    echo "${changed_file}"
+                done
+            fi
+        fi
+
+        rm -rf "${CURRENT_BUILD_FILES_TMP}"
+        rm -rf "${OTHER_BUILD_FILES_TMP}"
+        FIND_DIFFERENCES_BETWEEN_DIRECTORIES_RET="${CHANGES_DETECTED}"
+    }
+
+    DIFFERENCES_FOUND_WITH_LATEST_RELEASE="true"
+    if [[ "${LAST_RELEASE_FILE}" == "" ]] ; then
+        echo
+        echo "No release files in this repository"
     else
-        echo "No changes detected since latest unstable build."
-    fi
-    echo "Skipping..."
-    exit 0
-fi
+        echo
+        echo "Found latest release: ${LAST_RELEASE_FILE}"
+        LAST_RELEASE_COMMIT=$(git log -n 1 --pretty=format:%H -- "releases/${LAST_RELEASE_FILE}")
+        echo "    @ commit: ${LAST_RELEASE_COMMIT}"
+        echo
+        echo "Grabbing latest release files..."
 
+        git checkout -f "${LAST_RELEASE_COMMIT}" > /dev/null 2>&1 
+        LAST_RELEASE_FOLDER_TMP=$(mktemp -d)
+        docker build -f Dockerfile.file-filter -t filtered_files "${DOCKER_FOLDER}"
+        docker cp $(docker create --rm filtered_files):/files "${LAST_RELEASE_FOLDER_TMP}/"
+        LAST_RELEASE_DIR="${LAST_RELEASE_FOLDER_TMP}/files"
+
+        git checkout -f "${GITHUB_SHA}" > /dev/null 2>&1
+
+        echo
+        echo "Calculating differences with latest release..."
+
+        find_differences_between_directories "${CURRENT_BUILD_DIR}" "${LAST_RELEASE_DIR}"
+        DIFFERENCES_FOUND_WITH_LATEST_RELEASE="${FIND_DIFFERENCES_BETWEEN_DIRECTORIES_RET}"
+        rm -rf "${LAST_RELEASE_FOLDER_TMP}"
+        echo "Differences found with latest release: ${DIFFERENCES_FOUND_WITH_LATEST_RELEASE}"
+    fi
+
+    echo
+    echo "Grabbing files from latest unstable build..."
+    export GITHUB_TOKEN="${GITHUB_TOKEN}"
+    if gh release download "${RELEASE_TAG}" --pattern "${PREVIOUS_BUILD_ZIP}" 2> /dev/null ; then
+        PREVIOUS_BUILD_DIR_TMP=$(mktemp -d)
+        unzip -q "${PREVIOUS_BUILD_ZIP}" -d "${PREVIOUS_BUILD_DIR_TMP}"
+        rm "${PREVIOUS_BUILD_ZIP}"
+        echo "Done."
+    else
+        echo "No previous unstable build found."
+    fi
+
+    echo
+    echo "Calculating differences with previous unstable build..."
+    DIFFERENCES_FOUND_WITH_PREVIOUS_BUILD="true"
+    if [[ "${PREVIOUS_BUILD_DIR_TMP:-}" != "" ]] ; then
+        find_differences_between_directories "${CURRENT_BUILD_DIR}" "${PREVIOUS_BUILD_DIR_TMP}"
+        DIFFERENCES_FOUND_WITH_PREVIOUS_BUILD="${FIND_DIFFERENCES_BETWEEN_DIRECTORIES_RET}"
+        rm -rf "${PREVIOUS_BUILD_DIR_TMP}"
+    else
+        echo "There wasn't a previous unstable build!"
+    fi
+    echo "Differences found with previous unstable build: ${DIFFERENCES_FOUND_WITH_PREVIOUS_BUILD}"
+
+    if [[ "${DIFFERENCES_FOUND_WITH_LATEST_RELEASE}" != "true" ]] || [[ "${DIFFERENCES_FOUND_WITH_PREVIOUS_BUILD}" != "true" ]] ; then
+        rm -rf "${CURRENT_BUILD_FOLDER_TMP}" 2> /dev/null || true
+        echo
+        if [[ "${DIFFERENCES_FOUND_WITH_LATEST_RELEASE}" != "true" ]] ; then
+            echo "No changes detected since the latest release from upstream."
+        else
+            echo "No changes detected since latest unstable build."
+        fi
+        echo "Skipping..."
+        exit 0
+    fi
+fi
 
 echo
 echo "Zipping current files to prepare next LastBuild.zip file..."
@@ -250,8 +274,8 @@ sed -i "s%<<COMPILATION_OUTPUT>>%${COMPILATION_OUTPUT}%g" Dockerfile
 if [[ "${RANDOMIZE_SEED}" != "" ]] ; then
     RND="$RANDOM"
     echo "RANDOM SEED: ${RND}"
-    echo >> ${RANDOMIZE_SEED}
-    echo "set_global_assignment -name SEED ${RND}" >> ${RANDOMIZE_SEED}
+    echo >> "${RANDOMIZE_SEED}"
+    echo "set_global_assignment -name SEED ${RND}" >> "${RANDOMIZE_SEED}"
 fi
 
 docker build -f Dockerfile -t artifact "${DOCKER_FOLDER}"
@@ -317,5 +341,5 @@ if [[ "${DISPATCH_TOKEN:-}" != "" ]] ; then
         --data "${DATA_JSON}" \
         "${DISPATCH_URL}"
         
-    echo "Event sent succesfully."
+    echo "Event sent successfully."
 fi
