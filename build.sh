@@ -3,7 +3,6 @@ set -euo pipefail
 
 ARCHIVE_URL="https://github.com/MiSTer-unstable-nightlies/Build-Automation_MiSTer/archive/main.zip"
 
-echo
 echo "Unpacking ${ARCHIVE_URL}"
 BUILD_AUTOMATION_DIR_TMP=$(mktemp -d)
 wget -q -O "${BUILD_AUTOMATION_DIR_TMP}/tmp.zip" "${ARCHIVE_URL}"
@@ -92,7 +91,6 @@ if [[ "${EXTRA_DOCKERIGNORE_LINE:-}" == "" ]] ; then
     EXTRA_DOCKERIGNORE_LINE=""
 fi
 echo "EXTRA_DOCKERIGNORE_LINE: ${EXTRA_DOCKERIGNORE_LINE}"
-echo
 
 cp "${BUILD_AUTOMATION_DIR_TMP}/Build-Automation_MiSTer-main/templates/Dockerfile" .
 cp "${BUILD_AUTOMATION_DIR_TMP}/Build-Automation_MiSTer-main/templates/Dockerfile.file-filter" .
