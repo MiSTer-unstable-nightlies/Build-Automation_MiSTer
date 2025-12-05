@@ -307,20 +307,41 @@ gh release upload "${RELEASE_TAG}" commit.txt --clobber
 
 rm -rf "${CURRENT_BUILD_FOLDER_TMP}" 2> /dev/null || true
 
-COMMIT_MESSAGE_HEADER="$(git log --pretty='format:[%an %as %h]' -n1 ${GITHUB_SHA})"
-COMMIT_MESSAGE_BODY="$(git log --pretty='%B' -n1 ${GITHUB_SHA})"
-if [[ $COMMIT_MESSAGE_BODY == *$'\n'* ]] ; then
-    COMMIT_MESSAGE="${COMMIT_MESSAGE_HEADER}\n${COMMIT_MESSAGE_BODY}"
-else
-    COMMIT_MESSAGE="${COMMIT_MESSAGE_HEADER} ${COMMIT_MESSAGE_BODY}"
-fi
-COMMIT_MESSAGE="${COMMIT_MESSAGE//$'\n'/\\n}"
-COMMIT_MESSAGE="${COMMIT_MESSAGE//\"/\'}"
-COMMIT_MESSAGE="${COMMIT_MESSAGE//$'\r'/}"
-COMMIT_MESSAGE="${COMMIT_MESSAGE//$'\t'/    }"
-echo "COMMIT_MESSAGE: ${COMMIT_MESSAGE}"
+echo "Release uploaded successfully."
 
 if [[ "${DISPATCH_TOKEN:-}" != "" ]] ; then
+    COMMIT_TO_USE="${GITHUB_SHA}"
+    while true; do
+        CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r "${COMMIT_TO_USE}" 2>/dev/null || echo "")
+        NON_WORKFLOW_FILES=$(echo "${CHANGED_FILES}" | grep -v '^\.github/workflows/' || echo "")
+
+        if [[ -n "${NON_WORKFLOW_FILES}" ]] ; then
+            break
+        fi
+
+        # No non-workflow files (either empty commit or only workflow files). Try parent commit
+        COMMIT_TO_USE=$(git rev-parse "${COMMIT_TO_USE}^" 2>/dev/null || echo "")
+        if ! git rev-parse --verify "${COMMIT_TO_USE}" >/dev/null 2>&1 ; then
+            COMMIT_TO_USE="${GITHUB_SHA}"
+            break
+        fi
+    done
+
+    echo "Using commit for message: ${COMMIT_TO_USE}/${GITHUB_SHA}"
+
+    COMMIT_MESSAGE_HEADER="$(git log --pretty='format:[%an %as %h]' -n1 ${COMMIT_TO_USE})"
+    COMMIT_MESSAGE_BODY="$(git log --pretty='%B' -n1 ${COMMIT_TO_USE})"
+    if [[ $COMMIT_MESSAGE_BODY == *$'\n'* ]] ; then
+        COMMIT_MESSAGE="${COMMIT_MESSAGE_HEADER}\n${COMMIT_MESSAGE_BODY}"
+    else
+        COMMIT_MESSAGE="${COMMIT_MESSAGE_HEADER} ${COMMIT_MESSAGE_BODY}"
+    fi
+    COMMIT_MESSAGE="${COMMIT_MESSAGE//$'\n'/\\n}"
+    COMMIT_MESSAGE="${COMMIT_MESSAGE//\"/\'}"
+    COMMIT_MESSAGE="${COMMIT_MESSAGE//$'\r'/}"
+    COMMIT_MESSAGE="${COMMIT_MESSAGE//$'\t'/    }"
+    echo "COMMIT_MESSAGE: ${COMMIT_MESSAGE}"
+
     CLIENT_PAYLOAD="\"release_file_url\":\"${RELEASE_FILE_URL}\""
     CLIENT_PAYLOAD+=",\"core_name\":\"${CORE_NAME}\""
     CLIENT_PAYLOAD+=",\"repository\":\"${REPOSITORY}\""
