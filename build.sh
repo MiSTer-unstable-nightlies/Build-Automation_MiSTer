@@ -279,7 +279,7 @@ if [[ "${RANDOMIZE_SEED}" != "" ]] ; then
 fi
 
 export DOCKER_BUILDKIT=0 
-docker build --progress=plain -f Dockerfile -t artifact "${DOCKER_FOLDER}" 2>&1 | tee docker-build.log
+docker build -f Dockerfile -t artifact "${DOCKER_FOLDER}" 2>&1 | tee docker-build.log
 docker run --rm artifact > "${RELEASE_FILE}"
 
 RELEASE_FILE_URL="https://github.com/${REPOSITORY}/releases/download/${RELEASE_TAG}/${RELEASE_FILE}"
