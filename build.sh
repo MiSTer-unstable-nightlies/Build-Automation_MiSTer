@@ -280,7 +280,7 @@ if [[ "${RANDOMIZE_SEED}" != "" ]] ; then
     echo "set_global_assignment -name SEED ${RND}" >> "${RANDOMIZE_SEED}"
 fi
 
-docker build -f Dockerfile -t artifact "${DOCKER_FOLDER}"
+docker build --progress=plain -f Dockerfile -t artifact "${DOCKER_FOLDER}" 2>&1 | tee docker-build.log
 docker run --rm artifact > "${RELEASE_FILE}"
 
 RELEASE_FILE_URL="https://github.com/${REPOSITORY}/releases/download/${RELEASE_TAG}/${RELEASE_FILE}"
@@ -303,6 +303,7 @@ echo "${GITHUB_SHA}" > commit.txt
 
 gh release upload "${RELEASE_TAG}" "${RELEASE_FILE}" --clobber
 gh release upload "${RELEASE_TAG}" "${CURRENT_BUILD_DIR}/${PREVIOUS_BUILD_ZIP}" --clobber
+gh release upload "${RELEASE_TAG}" docker-build.log --clobber
 gh release upload "${RELEASE_TAG}" commit.txt --clobber
 
 rm -rf "${CURRENT_BUILD_FOLDER_TMP}" 2> /dev/null || true
