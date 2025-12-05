@@ -83,6 +83,8 @@ echo "RANDOMIZE_SEED: ${RANDOMIZE_SEED}"
 
 if [[ "${SKIP_DIFF_CHECK:-}" == "" ]] ; then
     SKIP_DIFF_CHECK="false"
+else
+    SKIP_DIFF_CHECK="${SKIP_DIFF_CHECK,,}"
 fi
 echo "SKIP_DIFF_CHECK: ${SKIP_DIFF_CHECK}"
 
