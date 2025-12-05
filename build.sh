@@ -278,11 +278,13 @@ if [[ "${RANDOMIZE_SEED}" != "" ]] ; then
     echo "set_global_assignment -name SEED ${RND}" >> "${RANDOMIZE_SEED}"
 fi
 
-docker buildx create --bootstrap --use --name buildkit-unlimited-logs \
-    --driver-opt env.BUILDKIT_STEP_LOG_MAX_SIZE=-1 \
-    --driver-opt env.BUILDKIT_STEP_LOG_MAX_SPEED=-1
-docker buildx build -f Dockerfile -t artifact "${DOCKER_FOLDER}" 2>&1 | tee docker-build.log
-docker run --rm artifact > "${RELEASE_FILE}"
+docker run --rm \
+    -v "$(pwd)/${DOCKER_FOLDER}:/quartus" \
+    "${DOCKER_IMAGE}" \
+    bash -c "${COMPILATION_COMMAND}" \
+    2>&1 | tee docker-build.log
+
+cp "${DOCKER_FOLDER}/${COMPILATION_OUTPUT}" "${RELEASE_FILE}"
 
 RELEASE_FILE_URL="https://github.com/${REPOSITORY}/releases/download/${RELEASE_TAG}/${RELEASE_FILE}"
 echo "Uploading release to ${RELEASE_FILE_URL}"
