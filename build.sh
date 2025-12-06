@@ -278,8 +278,13 @@ if [[ "${RANDOMIZE_SEED}" != "" ]] ; then
     echo "set_global_assignment -name SEED ${RND}" >> "${RANDOMIZE_SEED}"
 fi
 
+MOUNT_POINT="/project"
+if [[ "${DOCKER_IMAGE}" == *docker0 ]]; then
+    MOUNT_POINT="/quartus"
+fi
+
 docker run --rm \
-    -v "$(pwd)/${DOCKER_FOLDER}:/quartus" \
+    -v "$(pwd)/${DOCKER_FOLDER}:/${MOUNT_POINT}" \
     "${DOCKER_IMAGE}" \
     bash -c "${COMPILATION_COMMAND}" \
     2>&1 | tee docker-build.log
