@@ -281,6 +281,7 @@ fi
 MOUNT_POINT="/project"
 if [[ "${DOCKER_IMAGE}" == *docker0 ]]; then
     MOUNT_POINT="/quartus"
+    echo "MOUNT_POINT: ${MOUNT_POINT}"
 fi
 
 docker run --rm \
