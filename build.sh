@@ -278,11 +278,9 @@ if [[ "${RANDOMIZE_SEED}" != "" ]] ; then
     echo "set_global_assignment -name SEED ${RND}" >> "${RANDOMIZE_SEED}"
 fi
 
-docker buildx create --bootstrap --use --name buildkit-unlimited-logs \
-    --driver-opt env.BUILDKIT_STEP_LOG_MAX_SIZE=-1 \
-    --driver-opt env.BUILDKIT_STEP_LOG_MAX_SPEED=-1
-docker buildx build -f Dockerfile -t artifact "${DOCKER_FOLDER}" 2>&1 | tee docker-build.log
-docker run --rm artifact > "${RELEASE_FILE}"
+docker run --rm \
+    -w /project -v "$(pwd)/${DOCKER_FOLDER}:/project" \
+    "${DOCKER_IMAGE}" bash -c "${COMPILATION_COMMAND}" 2>&1 | tee docker-build.log
 
 cp "${DOCKER_FOLDER}/${COMPILATION_OUTPUT}" "${RELEASE_FILE}"
 
