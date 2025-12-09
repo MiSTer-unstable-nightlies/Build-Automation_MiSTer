@@ -281,8 +281,8 @@ fi
 docker buildx create --bootstrap --use --name buildkit-unlimited-logs \
     --driver-opt env.BUILDKIT_STEP_LOG_MAX_SIZE=-1 \
     --driver-opt env.BUILDKIT_STEP_LOG_MAX_SPEED=-1
-docker buildx build -f Dockerfile -t artifact --output type=docker "${DOCKER_FOLDER}" 2>&1 | tee docker-build.log
-docker run --rm artifact > "${RELEASE_FILE}"
+docker buildx build -f Dockerfile -t artifact \
+    --output "type=local,dest=.,include=/project/${COMPILATION_OUTPUT}" "${DOCKER_FOLDER}" 2>&1 | tee docker-build.log
 
 cp "${DOCKER_FOLDER}/${COMPILATION_OUTPUT}" "${RELEASE_FILE}"
 
