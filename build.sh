@@ -282,10 +282,9 @@ docker buildx create --bootstrap --use --name buildkit-unlimited-logs \
     --driver-opt env.BUILDKIT_STEP_LOG_MAX_SIZE=-1 \
     --driver-opt env.BUILDKIT_STEP_LOG_MAX_SPEED=-1
 docker buildx build -f Dockerfile -t artifact \
-    --output "type=local,dest=build_artifact_output" "${DOCKER_FOLDER}" 2>&1 | tee docker-build.log
+    --output "type=local,dest=build_artifact" "${DOCKER_FOLDER}" 2>&1 | tee docker-build.log
 
-echo cp "build_artifact_output/project/${COMPILATION_OUTPUT}" "${RELEASE_FILE}"
-cp "build_artifact_output/project/${COMPILATION_OUTPUT}" "${RELEASE_FILE}"
+cp "build_artifact/project/${COMPILATION_OUTPUT}" "${RELEASE_FILE}"
 
 RELEASE_FILE_URL="https://github.com/${REPOSITORY}/releases/download/${RELEASE_TAG}/${RELEASE_FILE}"
 echo "Uploading release to ${RELEASE_FILE_URL}"
