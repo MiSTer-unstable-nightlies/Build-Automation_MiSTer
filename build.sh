@@ -75,10 +75,20 @@ if [[ "${COMPILATION_OUTPUT:-}" == "" ]] ; then
 fi
 echo "COMPILATION_OUTPUT: ${COMPILATION_OUTPUT}"
 
+if [[ "${SEED_QSF_FILE:-}" == "" ]] ; then
+    SEED_QSF_FILE="${CORE_NAME}.qsf"
+fi
+echo "SEED_QSF_FILE: ${SEED_QSF_FILE}"
+
+if [[ "${SEED:-}" == "" ]] ; then
+    SEED=""
+fi
+echo "SEED: ${SEED}"
+
 if [[ "${RANDOMIZE_SEED:-}" == "" ]] ; then
     RANDOMIZE_SEED=""
 fi
-echo "RANDOMIZE_SEED: ${RANDOMIZE_SEED}"
+echo "RANDOMIZE_SEED (deprecated): ${RANDOMIZE_SEED}"
 
 if [[ "${SKIP_DIFF_CHECK:-}" == "" ]] ; then
     SKIP_DIFF_CHECK="false"
@@ -271,11 +281,31 @@ sed -i "s%<<DOCKER_IMAGE>>%${DOCKER_IMAGE}%g" Dockerfile
 sed -i "s%<<COMPILATION_COMMAND>>%${COMPILATION_COMMAND}%g" Dockerfile
 sed -i "s%<<COMPILATION_OUTPUT>>%${COMPILATION_OUTPUT}%g" Dockerfile
 
-if [[ "${RANDOMIZE_SEED}" != "" ]] ; then
-    RND="$RANDOM"
-    echo "RANDOM SEED: ${RND}"
-    echo >> "${RANDOMIZE_SEED}"
-    echo "set_global_assignment -name SEED ${RND}" >> "${RANDOMIZE_SEED}"
+append_seed_to_file() {
+    local seed_value="${1}"
+    local target_file="${2}"
+    if [[ ! -f "${target_file}" ]] ; then
+        echo "ERROR: SEED_QSF_FILE '${target_file}' does not exist"
+        echo "If you don't want to change the seed, remove these parameters: SEED or RANDOMIZE_SEED"
+        exit 1
+    fi
+    echo "APPENDING SEED: ${seed_value} to ${target_file}"
+    echo >> "${target_file}"
+    echo "set_global_assignment -name SEED ${seed_value}" >> "${target_file}"
+}
+
+if [[ "${SEED}" != "" ]] ; then
+    if [[ "${SEED,,}" == "random" ]] ; then
+        append_seed_to_file "$RANDOM" "${SEED_QSF_FILE}"
+    elif [[ "${SEED}" =~ ^[0-9]+$ ]] ; then
+        append_seed_to_file "${SEED}" "${SEED_QSF_FILE}"
+    else
+        echo "ERROR: SEED must be either 'random' or a numeric value, but got: ${SEED}"
+        exit 1
+    fi
+elif [[ "${RANDOMIZE_SEED}" != "" ]] ; then
+    echo "WARNING: RANDOMIZE_SEED is deprecated. Please use SEED=random and SEED_QSF_FILE instead."
+    append_seed_to_file "$RANDOM" "${RANDOMIZE_SEED}"
 fi
 
 docker buildx create --bootstrap --use --name buildkit-unlimited-logs \
