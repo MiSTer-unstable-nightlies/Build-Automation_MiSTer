@@ -1,4 +1,4 @@
-FROM <<DOCKER_IMAGE>> as builder
+FROM <<DOCKER_IMAGE>> AS builder
 WORKDIR /project
 ADD . /project
 RUN <<COMPILATION_COMMAND>>
