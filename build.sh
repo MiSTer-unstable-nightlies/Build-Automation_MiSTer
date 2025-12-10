@@ -281,31 +281,33 @@ sed -i "s%<<DOCKER_IMAGE>>%${DOCKER_IMAGE}%g" Dockerfile
 sed -i "s%<<COMPILATION_COMMAND>>%${COMPILATION_COMMAND}%g" Dockerfile
 sed -i "s%<<COMPILATION_OUTPUT>>%${COMPILATION_OUTPUT}%g" Dockerfile
 
-append_seed_to_file() {
-    local seed_value="${1}"
-    local target_file="${2}"
-    if [[ ! -f "${target_file}" ]] ; then
-        echo "ERROR: SEED_QSF_FILE '${target_file}' does not exist"
-        echo "If you don't want to change the seed, remove these parameters: SEED or RANDOMIZE_SEED"
-        exit 1
-    fi
-    echo "APPENDING SEED: ${seed_value} to ${target_file}"
-    echo >> "${target_file}"
-    echo "set_global_assignment -name SEED ${seed_value}" >> "${target_file}"
-}
+if [[ "${SEED}" != "" ]] || [[ "${RANDOMIZE_SEED}" != "" ]] ; then
+    append_seed_to_file() {
+        local seed_value="${1}"
+        local target_file="${2}"
+        if [[ ! -f "${target_file}" ]] ; then
+            echo "ERROR: SEED_QSF_FILE '${target_file}' does not exist"
+            echo "If you don't want to change the seed, remove these parameters: SEED or RANDOMIZE_SEED"
+            exit 1
+        fi
+        echo "APPENDING SEED: ${seed_value} to ${target_file}"
+        echo >> "${target_file}"
+        echo "set_global_assignment -name SEED ${seed_value}" >> "${target_file}"
+    }
 
-if [[ "${SEED}" != "" ]] ; then
-    if [[ "${SEED,,}" == "random" ]] ; then
-        append_seed_to_file "$RANDOM" "${SEED_QSF_FILE}"
-    elif [[ "${SEED}" =~ ^[0-9]+$ ]] ; then
-        append_seed_to_file "${SEED}" "${SEED_QSF_FILE}"
-    else
-        echo "ERROR: SEED must be either 'random' or a numeric value, but got: ${SEED}"
-        exit 1
+    if [[ "${SEED}" != "" ]] ; then
+        if [[ "${SEED,,}" == "random" ]] ; then
+            append_seed_to_file "$RANDOM" "${SEED_QSF_FILE}"
+        elif [[ "${SEED}" =~ ^[0-9]+$ ]] ; then
+            append_seed_to_file "${SEED}" "${SEED_QSF_FILE}"
+        else
+            echo "ERROR: SEED must be either 'random' or a numeric value, but got: ${SEED}"
+            exit 1
+        fi
+    elif [[ "${RANDOMIZE_SEED}" != "" ]] ; then
+        echo "WARNING: RANDOMIZE_SEED is deprecated. Please use SEED=random and SEED_QSF_FILE instead."
+        append_seed_to_file "$RANDOM" "${RANDOMIZE_SEED}"
     fi
-elif [[ "${RANDOMIZE_SEED}" != "" ]] ; then
-    echo "WARNING: RANDOMIZE_SEED is deprecated. Please use SEED=random and SEED_QSF_FILE instead."
-    append_seed_to_file "$RANDOM" "${RANDOMIZE_SEED}"
 fi
 
 docker buildx create --bootstrap --use --name buildkit-unlimited-logs \
@@ -345,21 +347,30 @@ echo "Release uploaded successfully."
 
 if [[ "${DISPATCH_TOKEN:-}" != "" ]] ; then
     COMMIT_TO_USE="${GITHUB_SHA}"
-    # while true; do
-    #     CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r "${COMMIT_TO_USE}" 2>/dev/null || echo "")
-    #     NON_WORKFLOW_FILES=$(echo "${CHANGED_FILES}" | grep -v '^\.github/workflows/' || echo "")
+    MAX_DEPTH=10
+    DEPTH=0
 
-    #     if [[ -n "${NON_WORKFLOW_FILES}" ]] ; then
-    #         break
-    #     fi
+    while [ ${DEPTH} -lt ${MAX_DEPTH} ]; do
+        DEPTH=$((DEPTH + 1))
+        CHANGED_FILES=$(git diff-tree -m --no-commit-id --name-only -r "${COMMIT_TO_USE}" 2>/dev/null || echo "")
 
-    #     # No non-workflow files (either empty commit or only workflow files). Try parent commit
-    #     COMMIT_TO_USE=$(git rev-parse "${COMMIT_TO_USE}^" 2>/dev/null || echo "")
-    #     if ! git rev-parse --verify "${COMMIT_TO_USE}" >/dev/null 2>&1 ; then
-    #         COMMIT_TO_USE="${GITHUB_SHA}"
-    #         break
-    #     fi
-    # done
+        # Check if we found a commit with non-workflow files
+        if [[ -n "${CHANGED_FILES}" ]] ; then
+            NON_WORKFLOW_FILES=$(echo "${CHANGED_FILES}" | grep -v '^\.github/workflows/' || echo "")
+            if [[ -n "${NON_WORKFLOW_FILES}" ]] ; then
+                break
+            fi
+        fi
+
+        # Try parent commit
+        COMMIT_TO_USE=$(git rev-parse "${COMMIT_TO_USE}^" 2>/dev/null || echo "")
+
+        # If we can't get parent or hit max depth, fallback
+        if [ ${DEPTH} -ge ${MAX_DEPTH} ] || [[ -z "${COMMIT_TO_USE}" ]] || ! git rev-parse --verify "${COMMIT_TO_USE}" >/dev/null 2>&1 ; then
+            COMMIT_TO_USE="${GITHUB_SHA}"
+            break
+        fi
+    done
 
     echo "Using commit for message: ${COMMIT_TO_USE}/${GITHUB_SHA}"
 
