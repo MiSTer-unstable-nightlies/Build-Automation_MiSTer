@@ -315,21 +315,21 @@ echo "Release uploaded successfully."
 
 if [[ "${DISPATCH_TOKEN:-}" != "" ]] ; then
     COMMIT_TO_USE="${GITHUB_SHA}"
-    while true; do
-        CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r "${COMMIT_TO_USE}" 2>/dev/null || echo "")
-        NON_WORKFLOW_FILES=$(echo "${CHANGED_FILES}" | grep -v '^\.github/workflows/' || echo "")
+    # while true; do
+    #     CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r "${COMMIT_TO_USE}" 2>/dev/null || echo "")
+    #     NON_WORKFLOW_FILES=$(echo "${CHANGED_FILES}" | grep -v '^\.github/workflows/' || echo "")
 
-        if [[ -n "${NON_WORKFLOW_FILES}" ]] ; then
-            break
-        fi
+    #     if [[ -n "${NON_WORKFLOW_FILES}" ]] ; then
+    #         break
+    #     fi
 
-        # No non-workflow files (either empty commit or only workflow files). Try parent commit
-        COMMIT_TO_USE=$(git rev-parse "${COMMIT_TO_USE}^" 2>/dev/null || echo "")
-        if ! git rev-parse --verify "${COMMIT_TO_USE}" >/dev/null 2>&1 ; then
-            COMMIT_TO_USE="${GITHUB_SHA}"
-            break
-        fi
-    done
+    #     # No non-workflow files (either empty commit or only workflow files). Try parent commit
+    #     COMMIT_TO_USE=$(git rev-parse "${COMMIT_TO_USE}^" 2>/dev/null || echo "")
+    #     if ! git rev-parse --verify "${COMMIT_TO_USE}" >/dev/null 2>&1 ; then
+    #         COMMIT_TO_USE="${GITHUB_SHA}"
+    #         break
+    #     fi
+    # done
 
     echo "Using commit for message: ${COMMIT_TO_USE}/${GITHUB_SHA}"
 
